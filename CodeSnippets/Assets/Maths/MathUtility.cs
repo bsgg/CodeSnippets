@@ -2,7 +2,7 @@
 using System.Collections;
 using System;
 
-namespace MiscCode.Utility
+namespace Utility
 {
     public class MathUtility
     {
