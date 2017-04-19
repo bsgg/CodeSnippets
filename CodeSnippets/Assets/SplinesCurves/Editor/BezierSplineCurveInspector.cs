@@ -43,8 +43,6 @@ namespace UtilityCurves
                 m_Spline.Loop = loop;
             }
 
-
-
             if (m_SelectedIndex >= 0 && m_SelectedIndex < m_Spline.ControlPointCount)
             {
                 DrawSelectedPointInspector();
