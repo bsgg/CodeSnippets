@@ -47,7 +47,6 @@ namespace Interactions
 
         protected virtual void DoUpdate()
         {
-
             // Check phases
             if (m_PhaseInteraction == EPHASEINTERACTION.START)
             {
