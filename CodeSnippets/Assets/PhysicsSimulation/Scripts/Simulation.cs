@@ -29,10 +29,15 @@ namespace CodeSnippets
             {
                 m_Time += Time.deltaTime;
 
-                Vector2 position = MiscPhysics.GetPosition(m_InitVelocity,m_Angle, m_Time);
+                // Parabolic movement
+                m_CurrentVelocity = MiscPhysics.GetVelocity(MiscPhysics.ETYPEPHYSICS.PARABOLIC,m_InitVelocity, m_Angle, m_Time);
+
+                Vector2 position = MiscPhysics.GetPosition(MiscPhysics.ETYPEPHYSICS.PARABOLIC,m_InitVelocity, m_Angle, m_Time);
                 transform.localPosition = new Vector3(position.x, position.y, transform.localPosition.z);
 
-                m_CurrentVelocity = MiscPhysics.GetVelocity(m_InitVelocity, m_Angle, m_Time);
+
+                // Free fall
+                m_CurrentVelocity = MiscPhysics.GetVelocity(MiscPhysics.ETYPEPHYSICS.PARABOLIC,m_InitVelocity, m_Angle, m_Time);
             }            
         }
     }
