@@ -1,0 +1,1 @@
+Follow along this tutorial to understand shaders: http://catlikecoding.com/unity/tutorials/rendering/part-1/
