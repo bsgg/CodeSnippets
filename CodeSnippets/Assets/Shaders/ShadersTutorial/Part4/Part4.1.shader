@@ -39,12 +39,22 @@ Shader "Custom/Part4.1"
 				//i.position = mul(UNITY_MATRIX_MVP, position); // equivalent to next element
 				output.position = UnityObjectToClipPos(input.position);
 
-				// Transform normales from object space into world space
+				// All the normals are in object  space (mesh's local space ), we need to know the surface orientation in world space.
+				// The normals need to be transformed from object space into world space
+				// We need the object's transformation for this. Unity collapses an object's entire transformation (all the transformations, rotation scale and position)
+				// hierarchy into a single transformation matrix: float4x4 unity_ObjectToWorld
+				// output.normal = mul((float3x3)unity_ObjectToWorld, input.normal)); The fourth row will be ignored since is position
+				// After transform into world space, they need to be normalized: output.normal = normalize(output.normal);
+				// This normalization, makes some normals look weird in objects with not uniform scale. For this objects, the normals need to be
+				// inverted, but the rotation should be the same.
+
 				// transpose the world-to-object matrix and multiply that with the vertex normal.
-				output.normal = mul(transpose((float3x3)unity_WorldToObject),
-					input.normal);
+				//output.normal = mul(transpose((float3x3)unity_WorldToObject),	input.normal);
 				// Normalize normals (uniform scale)
-				output.normal = normalize(output.normal);
+				//output.normal = normalize(output.normal);
+
+				// With UnityObjectToWorldNormal unity does the transpose of the matrix transformation in worldspace
+				output.normal = UnityObjectToWorldNormal(input.normal);
 					
 				return output;
 			}
