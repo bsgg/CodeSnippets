@@ -1,15 +1,23 @@
 ﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "Custom/Part4.1" 
+Shader "Custom/Part4.3" 
 {
 	Properties 
 	{
 		_Color ("Color", Color) = (1,1,1,1)		
+		_MainTex("Albedo", 2D) = "white" {}
 	}
 	SubShader 
 	{		
 		Pass
 		{
+			
+			Tags
+			{
+				// Type of light mode, in this case is forward rendering (default one)
+				"LightMode" = "ForwardBase"
+			}
+
 			CGPROGRAM
 
 			#pragma vertex VertexProgram
@@ -19,6 +27,8 @@ Shader "Custom/Part4.1"
 			#include "UnityStandardBRDF.cginc"
 
 			float4 _Color;
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
 
 			struct VertexData
 			{
@@ -56,6 +66,8 @@ Shader "Custom/Part4.1"
 
 				// With UnityObjectToWorldNormal unity does the transpose of the matrix transformation in worldspace
 				output.normal = UnityObjectToWorldNormal(input.normal);
+
+				output.uv = TRANSFORM_TEX(input.uv, _MainTex);
 					
 				return output;
 			}
@@ -66,21 +78,25 @@ Shader "Custom/Part4.1"
 
 				// Visualizing the normals
 				input.normal = normalize(input.normal);
-				//color = float4(input.normal * 0.5 + 0.5, 1);
-				//return color;
 
-				// Dot product between normla and ad a fixed light direction
-				// The amount of diffused light is directly prportional to the cosion of the angel between
-				// teh light direction and the srface normal
-				// Dot product returns a float number
-				// We need to clamp between 0 and the dot product to avoid negative numbers.
-				//return max(0,dot(float3(0, 1, 0), input.normal));
+				// Get the position of the current light and return with the dot product of the input
+				//float3 lightDir = _WorldSpaceLightPos0.xyz;
+				//return DotClamped(lightDir, input.normal);
 
-				// Intead of max for clamping, we can use standard function saturate wich clamps between 0 and 1
-				//return saturate(dot(float3(0, 1, 0), input.normal));
+				// Ge lightDir and light color of current light
+				float3 lightDir = _WorldSpaceLightPos0.xyz;
+				float3 lightColor = _LightColor0.rgb;
 
-				// Function in UnityStandardBRDF.cginc for clamping dot procut, it will never be negative
-				return DotClamped(float3(0, 1, 0), input.normal);
+				// Calculate the intensity of that light and get the final diffuse color
+				float intensityLight = DotClamped(lightDir, input.normal);
+				//float3 diffuseColor = lightColor * intensityLight;
+				//return float4(diffuseColor, 1);
+
+				// Include albedo = Albedo is Latin for whiteness. So it describes how much of the red, green, and blue color channels are diffusely reflected
+				float3 albedo = tex2D(_MainTex, input.uv).rgb * _Color.rgb;
+				float3 diffuseColor = albedo * lightColor * intensityLight;
+
+				return float4(diffuseColor, 1);
 				
 			}
 
