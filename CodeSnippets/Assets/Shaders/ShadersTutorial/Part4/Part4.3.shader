@@ -42,6 +42,7 @@ Shader "Custom/Part4.3"
 				float4 position : SV_POSITION;
 				float2 uv : TEXCOORD0;
 				float3 normal : TEXCOORD1;
+				float3 worldPos : TEXCOORD2;
 			};
 
 			OutputVertexData VertexProgram(VertexData input)
@@ -68,6 +69,9 @@ Shader "Custom/Part4.3"
 				output.normal = UnityObjectToWorldNormal(input.normal);
 
 				output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+
+				// World position of the surface (each vertex)
+				output.worldPos = mul(unity_ObjectToWorld, input.position);
 					
 				return output;
 			}
@@ -92,11 +96,23 @@ Shader "Custom/Part4.3"
 				//float3 diffuseColor = lightColor * intensityLight;
 				//return float4(diffuseColor, 1);
 
+				// Get Camera position
+				// Unity's shaders compute the view direction in the vertex program and interpolates that. Normalization is done in the fragment program
+				float3 viewDir = normalize(_WorldSpaceCameraPos - input.worldPos);
+
+
 				// Include albedo = Albedo is Latin for whiteness. So it describes how much of the red, green, and blue color channels are diffusely reflected
 				float3 albedo = tex2D(_MainTex, input.uv).rgb * _Color.rgb;
 				float3 diffuseColor = albedo * lightColor * intensityLight;
 
-				return float4(diffuseColor, 1);
+				//return float4(diffuseColor, 1);
+
+				// Reflection of the light, using reflect function
+				//  It takes the direction of an incoming light ray and reflects it based on a surface normal
+
+				float3 reflectionDir = reflect(-lightDir, input.normal);
+
+				return float4(reflectionDir * 0.5 + 0.5, 1);
 				
 			}
 
