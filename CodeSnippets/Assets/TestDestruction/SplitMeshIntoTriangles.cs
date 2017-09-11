@@ -9,7 +9,19 @@ public class SplitMeshIntoTriangles : MonoBehaviour
     private Mesh m_Mesh;
 
 
-   [SerializeField]  private List<GameObject> m_MeshList;
+    [SerializeField]  private List<GameObject> m_MeshList;
+    [SerializeField]
+    private float m_Mass = 1.0f;
+
+    [SerializeField]
+    private float m_MinExplosionForce = 50.0f;
+    [SerializeField]
+    private float m_MaxExplosionForce = 100.0f;
+
+    [SerializeField]
+    private float m_MinRadius = 50.0f;
+    [SerializeField]
+    private float m_MaxRadius = 100.0f;
 
     private void Start()
     {
@@ -54,6 +66,7 @@ public class SplitMeshIntoTriangles : MonoBehaviour
                 GameObject GO = new GameObject("Triangle " + (i / 3));
                 GO.transform.position = transform.position;
                 GO.transform.rotation = transform.rotation;
+                GO.transform.localScale = transform.localScale;
                 GO.AddComponent<MeshRenderer>().material = m_MeshRenderer.materials[submesh];
                 GO.AddComponent<MeshFilter>().mesh = mesh;
                 GO.AddComponent<BoxCollider>();
@@ -82,7 +95,8 @@ public class SplitMeshIntoTriangles : MonoBehaviour
         for (int i= 0; i< m_MeshList.Count; i++)
         {
             Rigidbody rig = m_MeshList[i].GetComponent<Rigidbody>();
-            rig.AddExplosionForce( Random.Range(100,150), transform.position, Random.Range(50, 100));
+            rig.mass = m_Mass;
+            rig.AddExplosionForce( Random.Range(m_MinExplosionForce, m_MaxExplosionForce), transform.position, Random.Range(m_MinRadius, m_MaxRadius));
             rig.useGravity = true;
 
             Destroy(m_MeshList[i],5);
