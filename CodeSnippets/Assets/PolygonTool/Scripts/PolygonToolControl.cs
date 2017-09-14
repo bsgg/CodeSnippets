@@ -42,6 +42,8 @@ namespace PolygoTool
 
         private string m_LogTag ="<color=#008080ff>[PolygonToolControl]</color>";
 
+        private bool m_PolygonWasSaved = true;
+
 
         private void Start()
         {
@@ -52,6 +54,7 @@ namespace PolygoTool
                 HidePoints();
                 m_ToolUI.Hide();
                 m_ToolUI.Message = "Polygon Tool";
+                m_PolygonWasSaved = true;
             }
         }
 
@@ -64,42 +67,45 @@ namespace PolygoTool
 
                 if (m_ToolUI.IsVisible)
                 {
+                    if (m_PolygonData.ListVertices.Count > 0)
+                    {
+                        // Only delete
+                        m_ToolUI.StartButton.interactable = false;
+                        m_ToolUI.SaveButton.interactable = false;
+                        m_ToolUI.DeleteButton.interactable = true;
+                    }
+                    else
+                    {
+                        // Only start
+                        m_ToolUI.StartButton.interactable = true;
+                        m_ToolUI.SaveButton.interactable = false;
+                        m_ToolUI.DeleteButton.interactable = false;
 
-                }
+                    }
 
-                    // If UI visible and data
-                    if ((m_ToolUI.IsVisible) && (m_PolygonData.ListVertices.Count > 0))
-                {
-                    // Disable Startbutton, Save button, Enable delete
-                    m_ToolUI.StartButton.interactable = false;
-                    m_ToolUI.SaveButton.interactable = false;
-                    m_ToolUI.DeleteButton.interactable = true;
-
-                    // Show points, change buttons
-                    ShowPoints();
-                    m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
-                    m_ToolUI.HidePointsButton.gameObject.SetActive(true);
-                    m_ToolUI.ShowPointsButton.interactable = true;
-                    m_ToolUI.HidePointsButton.interactable = true;
+                    if (m_ListObjectPoints.Count > 0)
+                    {
+                        // Show points, change buttons
+                        ShowPoints();
+                        m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
+                        m_ToolUI.HidePointsButton.gameObject.SetActive(true);
+                        m_ToolUI.ShowPointsButton.interactable = true;
+                        m_ToolUI.HidePointsButton.interactable = true;
+                    }else
+                    {
+                        HidePoints();
+                        m_ToolUI.ShowPointsButton.interactable = false;
+                        m_ToolUI.HidePointsButton.gameObject.SetActive(false);
+                    }
                 }
                 else
                 {
-                    // Enable only start button
-                    m_ToolUI.StartButton.interactable = true;
-                    m_ToolUI.SaveButton.interactable = false;
-                    m_ToolUI.DeleteButton.interactable = false;
-
-                    // Hide points
-                    HidePoints();
-                    m_ToolUI.ShowPointsButton.interactable = false;
-                    m_ToolUI.HidePointsButton.gameObject.SetActive(false);
-
-                    // No data, delete current polygon
-                    if (m_PolygonData.ListVertices.Count == 0)
+                    // Polygon wasn't saved                     
+                    if (!m_PolygonWasSaved)
                     {
                         DeletePolygon();
                     }
-                }
+                }  
                 
             }
 
@@ -209,6 +215,8 @@ namespace PolygoTool
         {
             ResetPolygon();
 
+            m_PolygonWasSaved = false;
+
             m_ToolUI.StartButton.interactable = false;
             StartCoroutine(WaitToStartCreate());           
             
@@ -299,9 +307,9 @@ namespace PolygoTool
                 stream.Close();
             }
 
-            m_ToolUI.StartButton.interactable = false;
-            m_ToolUI.SaveButton.interactable = false;
+
             Debug.unityLogger.Log(m_LogTag, " Polygon saved in " + filePath);
+            m_PolygonWasSaved = true;
         }
 
         public bool LoadPolygon()
