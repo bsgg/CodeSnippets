@@ -4,17 +4,16 @@ using UnityEngine;
 
 namespace Utility
 {
-    public class PolygonMaker : MonoBehaviour
+    public class PolygonToolMaker : MonoBehaviour
     {
         [SerializeField]
         private Material m_PolygonMaterial;
-
-
         [SerializeField]
-        private GameObject m_PointObjectPrefab;
-
-        [SerializeField]
+        private GameObject m_PointObjectPrefab; 
+               
         List<Vector2> m_ListVertices = new List<Vector2>();
+
+
 
 
         private void Update()
@@ -37,8 +36,15 @@ namespace Utility
 
                 }
             }
+        }
 
+        private void CreateMask()
+        {
 
+        }
+
+        private void SaveMask()
+        {
 
         }
 
