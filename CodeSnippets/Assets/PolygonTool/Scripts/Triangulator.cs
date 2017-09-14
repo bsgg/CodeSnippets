@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Utility
+namespace PolygoTool
 {
     public class Triangulator : MonoBehaviour
     {
