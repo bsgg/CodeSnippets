@@ -100,6 +100,9 @@ namespace PolygoTool
                 }
                 else
                 {
+                    // Always hide points
+                    HidePoints();
+
                     // Polygon wasn't saved                     
                     if (!m_PolygonWasSaved)
                     {
@@ -261,6 +264,9 @@ namespace PolygoTool
             if (m_PolygonData.ListVertices!= null && m_PolygonData.ListVertices.Count > 0)
             {
                 m_ToolUI.Message = "Polygon and file data deleted.";
+
+                m_ToolUI.DeleteButton.interactable = false;
+
                 StopCoroutine(ResetMessage());
                 StartCoroutine(ResetMessage());
             }else
@@ -272,6 +278,7 @@ namespace PolygoTool
             }
 
             m_ToolUI.StartButton.interactable = true;
+            m_ToolUI.SaveButton.interactable = false;
             ResetPolygon();
 
         }
@@ -310,6 +317,9 @@ namespace PolygoTool
 
             Debug.unityLogger.Log(m_LogTag, " Polygon saved in " + filePath);
             m_PolygonWasSaved = true;
+            m_ToolUI.SaveButton.interactable = false;
+            m_ToolUI.DeleteButton.interactable = true;
+            m_ToolUI.StartButton.interactable = false;
         }
 
         public bool LoadPolygon()
