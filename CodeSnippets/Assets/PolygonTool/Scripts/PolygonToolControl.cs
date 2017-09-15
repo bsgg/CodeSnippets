@@ -8,17 +8,18 @@ namespace PolygoTool
     [SerializeField]
     public class PolygonData
     {
-        public List<Vector2> ListVertices ;
+        public List<Vector3> ListVertices;
 
         public PolygonData()
         {
-            ListVertices = new List<Vector2>();
+            ListVertices = new List<Vector3>();
         }
     }
 
     public class PolygonToolControl : MonoBehaviour
     {
-        [SerializeField] private Material m_PolygonMaterial;
+        [SerializeField]
+        private Material m_PolygonMaterial;
         [SerializeField]
         private GameObject m_PointObjectPrefab;
 
@@ -39,15 +40,17 @@ namespace PolygoTool
         private bool m_LoadPolygon = true;
 
         [SerializeField]
-        private Camera m_Camera;
+        private PolygonToolUI m_ToolUI;
 
-        [SerializeField] private PolygonToolUI m_ToolUI;
+        [SerializeField]
+        private KeyCode m_KeyMenu = KeyCode.Q;
 
-        [SerializeField] private KeyCode m_KeyMenu = KeyCode.Q;
-
-        private string m_LogTag ="<color=#008080ff>[PolygonToolControl]</color>";
+        private string m_LogTag = "<color=#008080ff>[PolygonToolControl]</color>";
 
         private bool m_PolygonWasSaved = true;
+
+        [SerializeField]
+        private Camera m_Camera;
 
 
         private void Start()
@@ -96,7 +99,8 @@ namespace PolygoTool
                         m_ToolUI.HidePointsButton.gameObject.SetActive(true);
                         m_ToolUI.ShowPointsButton.interactable = true;
                         m_ToolUI.HidePointsButton.interactable = true;
-                    }else
+                    }
+                    else
                     {
                         HidePoints();
                         m_ToolUI.ShowPointsButton.interactable = false;
@@ -113,29 +117,42 @@ namespace PolygoTool
                     {
                         DeletePolygon();
                     }
-                }  
-                
+                }
+
             }
 
             if (m_Mode == EPolygonMode.CREATION)
             {
                 HandlePointsMouseCreation();
             }
-            
+
         }
 
         private void HandlePointsMouseCreation()
         {
             if (Input.GetMouseButtonUp(0))
             {
-                Vector3 mouseToWorld = m_Camera.ScreenToWorldPoint(Input.mousePosition);
-                mouseToWorld.z = m_DistanceToCamera;
+                Debug.Log("Input.mousePosition: " + Input.mousePosition);
+
+                Vector3 pointMouse = new Vector3(Input.mousePosition.x, Input.mousePosition.y, m_DistanceToCamera);
+                Vector3 mouseToWorld = m_Camera.ScreenToWorldPoint(pointMouse);
+
+                // mouseToWorld.z = m_DistanceToCamera;
+                Debug.Log("Input.mousePosition: " + pointMouse + " mouseToWorld: " + mouseToWorld);
+
+
+                // Debug.Log("Mouse to world: " + mouseToWorld);
 
                 // Check if this point collides with the first point
                 bool collision = false;
                 if (m_PolygonData.ListVertices.Count > 0)
                 {
                     float distance = Vector3.Distance(mouseToWorld, m_PolygonData.ListVertices[0]);
+
+                    Debug.Log("distance: " + distance);
+
+                    Debug.Log("m_PolygonData.ListVertices[0]: " + m_PolygonData.ListVertices[0] + " mouseToWorld: " + mouseToWorld);
+
 
                     // Finish polygon
                     if (distance <= m_CollisionRadius)
@@ -157,6 +174,8 @@ namespace PolygoTool
 
                 if (!collision)
                 {
+
+
                     if (m_PolygonData.ListVertices.Count < m_MaxPoints)
                     {
                         m_PolygonData.ListVertices.Add(mouseToWorld);
@@ -196,7 +215,8 @@ namespace PolygoTool
             Vector3[] vertices = new Vector3[m_PolygonData.ListVertices.Count];
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i] = new Vector3(m_PolygonData.ListVertices[i].x, m_PolygonData.ListVertices[i].y, m_DistanceToCamera);
+                //vertices[i] = new Vector3(m_PolygonData.ListVertices[i].x, m_PolygonData.ListVertices[i].y, m_DistanceToCamera);
+                vertices[i] = m_PolygonData.ListVertices[i];
             }
             // Create the mesh
             Mesh msh = new Mesh();
@@ -216,7 +236,7 @@ namespace PolygoTool
 
         private GameObject m_CurrentPolygon = null;
 
-        public enum EPolygonMode { NODE,CREATION};
+        public enum EPolygonMode { NODE, CREATION };
         private EPolygonMode m_Mode = EPolygonMode.NODE;
 
         public void StartPolygon()
@@ -226,8 +246,8 @@ namespace PolygoTool
             m_PolygonWasSaved = false;
 
             m_ToolUI.StartButton.interactable = false;
-            StartCoroutine(WaitToStartCreate());           
-            
+            StartCoroutine(WaitToStartCreate());
+
         }
 
         private IEnumerator WaitToStartCreate()
@@ -236,7 +256,7 @@ namespace PolygoTool
             m_Mode = EPolygonMode.CREATION;
         }
 
-       
+
         private void ResetPolygon()
         {
             // Clear mesh, vertices, objects
@@ -266,7 +286,7 @@ namespace PolygoTool
                 File.Delete(filePath);
             }
 
-            if (m_PolygonData.ListVertices!= null && m_PolygonData.ListVertices.Count > 0)
+            if (m_PolygonData.ListVertices != null && m_PolygonData.ListVertices.Count > 0)
             {
                 m_ToolUI.Message = "Polygon and file data deleted.";
 
@@ -274,7 +294,8 @@ namespace PolygoTool
 
                 StopCoroutine(ResetMessage());
                 StartCoroutine(ResetMessage());
-            }else
+            }
+            else
             {
 
                 m_ToolUI.Message = "No polygon data found.";
@@ -352,7 +373,7 @@ namespace PolygoTool
                 if (!string.IsNullOrEmpty(line))
                 {
                     m_PolygonData = JsonUtility.FromJson<PolygonData>(line);
-                   
+
                 }
                 stream.Close();
             }
@@ -371,14 +392,14 @@ namespace PolygoTool
             m_ListObjectPoints = new List<GameObject>();
             if (m_PolygonData != null)
             {
-                for (int i=0; i<m_PolygonData.ListVertices.Count; i++)
+                for (int i = 0; i < m_PolygonData.ListVertices.Count; i++)
                 {
                     GameObject obj = Instantiate(m_PointObjectPrefab, m_PolygonData.ListVertices[i], Quaternion.identity);
                     obj.name = "PolygonPoint_" + m_PolygonData.ListVertices.Count;
                     m_ListObjectPoints.Add(obj);
                 }
             }
-            
+
         }
 
         public void ShowPoints()

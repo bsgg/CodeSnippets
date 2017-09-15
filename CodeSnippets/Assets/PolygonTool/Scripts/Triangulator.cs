@@ -7,16 +7,20 @@ namespace PolygoTool
     public class Triangulator : MonoBehaviour
     {
 
-        private List<Vector2> m_points = new List<Vector2>();
+        private List<Vector3> m_points = new List<Vector3>();
 
         public Triangulator(Vector2[] points)
         {
-            m_points = new List<Vector2>(points);
+            //m_points = new List<Vector2>(points);
         }
 
-        public Triangulator(List<Vector2> points)
+        public Triangulator(List<Vector3> points)
         {
-            m_points = new List<Vector2>(points);
+            m_points = new List<Vector3>(points);
+            /*for (int i= 0; i< points.Count; i++)
+            {
+                m_points.Add(new Vector2(points[i].x, points[i].y));
+            }*/
         }
 
         public int[] Triangulate()
@@ -83,8 +87,8 @@ namespace PolygoTool
             float A = 0.0f;
             for (int p = n - 1, q = 0; q < n; p = q++)
             {
-                Vector2 pval = m_points[p];
-                Vector2 qval = m_points[q];
+                Vector3 pval = m_points[p];
+                Vector3 qval = m_points[q];
                 A += pval.x * qval.y - qval.x * pval.y;
             }
             return (A * 0.5f);
@@ -93,9 +97,9 @@ namespace PolygoTool
         private bool Snip(int u, int v, int w, int n, int[] V)
         {
             int p;
-            Vector2 A = m_points[V[u]];
-            Vector2 B = m_points[V[v]];
-            Vector2 C = m_points[V[w]];
+            Vector3 A = m_points[V[u]];
+            Vector3 B = m_points[V[v]];
+            Vector3 C = m_points[V[w]];
             if (Mathf.Epsilon > (((B.x - A.x) * (C.y - A.y)) - ((B.y - A.y) * (C.x - A.x))))
                 return false;
             for (p = 0; p < n; p++)
@@ -109,7 +113,7 @@ namespace PolygoTool
             return true;
         }
 
-        private bool InsideTriangle(Vector2 A, Vector2 B, Vector2 C, Vector2 P)
+        private bool InsideTriangle(Vector3 A, Vector3 B, Vector3 C, Vector3 P)
         {
             float ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
             float cCROSSap, bCROSScp, aCROSSbp;
