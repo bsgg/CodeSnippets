@@ -32,9 +32,14 @@ namespace PolygoTool
         [SerializeField]
         private int m_MaxPoints = 50;
 
+        [SerializeField]
+        private float m_DistanceToCamera = 0.0f;
 
         [SerializeField]
         private bool m_LoadPolygon = true;
+
+        [SerializeField]
+        private Camera m_Camera;
 
         [SerializeField] private PolygonToolUI m_ToolUI;
 
@@ -123,8 +128,8 @@ namespace PolygoTool
         {
             if (Input.GetMouseButtonUp(0))
             {
-                Vector3 mouseToWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mouseToWorld.z = 0.0f;
+                Vector3 mouseToWorld = m_Camera.ScreenToWorldPoint(Input.mousePosition);
+                mouseToWorld.z = m_DistanceToCamera;
 
                 // Check if this point collides with the first point
                 bool collision = false;
@@ -191,7 +196,7 @@ namespace PolygoTool
             Vector3[] vertices = new Vector3[m_PolygonData.ListVertices.Count];
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i] = new Vector3(m_PolygonData.ListVertices[i].x, m_PolygonData.ListVertices[i].y, 0.0f);
+                vertices[i] = new Vector3(m_PolygonData.ListVertices[i].x, m_PolygonData.ListVertices[i].y, m_DistanceToCamera);
             }
             // Create the mesh
             Mesh msh = new Mesh();
