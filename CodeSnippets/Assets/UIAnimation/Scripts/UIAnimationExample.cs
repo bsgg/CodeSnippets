@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-namespace MiscCode
+namespace Utility
 {
     public class UIAnimationExample : MonoBehaviour
     {
