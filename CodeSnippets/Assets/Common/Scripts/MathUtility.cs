@@ -13,7 +13,6 @@ namespace Utility
         /// <param name="array"></param>
         public static void Shuffle<T>(ref T[] array)
         {
-            UnityEngine.Random random = new UnityEngine.Random();
             for (int i = 0; i < array.Length; i++)
             {
                 int idx = UnityEngine.Random.Range(i, array.Length);
