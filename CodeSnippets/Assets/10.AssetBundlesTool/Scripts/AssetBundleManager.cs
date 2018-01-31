@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace AssetBundleTool
@@ -9,8 +10,9 @@ namespace AssetBundleTool
     public class IndexFile
     {
         public string ID;
-        public string AndroidFile;
+        public string AndroidFile;        
         public string IOSFile;
+        public int BundleVersion;
     }
 
     [Serializable]
@@ -30,12 +32,16 @@ namespace AssetBundleTool
         [SerializeField] private string m_IndexFileData = "FileData.json";
         [SerializeField] private FileData m_FileData;
 
+        [SerializeField] private FileData m_LocalFileData;
+
 
         [SerializeField] private List<GameObject> m_AssetBundleList;
         [SerializeField] private Transform m_AssetBundleParent;
 
         private int m_NumberBundlesLoaded;
         private int m_TotalBundlesToLoad;
+
+        private string m_AssetBundlesPersistentPath;
 
 
         private void Start()
@@ -46,9 +52,19 @@ namespace AssetBundleTool
 
         private IEnumerator LoadBundles()
         {
+            // Persisten data asset bundle
+            m_AssetBundlesPersistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles");
+
+            // Create directory if doesn't exsit
+            if (!Directory.Exists(m_AssetBundlesPersistentPath))
+            {
+                Directory.CreateDirectory(m_AssetBundlesPersistentPath);
+            }
+
             m_NumberBundlesLoaded = 0;
             m_TotalBundlesToLoad = 0;
             m_AssetBundleList = new List<GameObject>();
+
             yield return RequestIndexDataFile();
 
             if (m_FileData.Data != null)
@@ -95,9 +111,9 @@ namespace AssetBundleTool
                 Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Index File Data is empty" + "</color>");
                 yield return null;
             }
+           
 
-            string filePath = System.IO.Path.Combine(m_AssetBundlesUrl, m_IndexFileData);
-
+            string filePath = Path.Combine(m_AssetBundlesUrl, m_IndexFileData);
             WWW wwwFile = new WWW(filePath);
             yield return wwwFile;
             string jsonData = wwwFile.text;
@@ -105,6 +121,33 @@ namespace AssetBundleTool
             if (!string.IsNullOrEmpty(jsonData))
             {
                 m_FileData = JsonUtility.FromJson<FileData>(jsonData);
+            }
+
+
+            // Check if file index exist in persistent data
+            string localFileIndexPath = Path.Combine(m_AssetBundlesPersistentPath, m_IndexFileData);
+            Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Retrieving index file data from local: " + localFileIndexPath + "</color>");
+            if (File.Exists(localFileIndexPath))
+            {
+                // Retrive file
+                StreamReader reader = new StreamReader(localFileIndexPath);
+                string text = reader.ReadToEnd();
+                reader.Close();
+
+                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Local file exits: " + text + "</color>");
+
+                if (!string.IsNullOrEmpty(text))
+                {
+                    m_LocalFileData = JsonUtility.FromJson<FileData>(text);
+                }
+            }else
+            {
+                m_LocalFileData = m_FileData;
+                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
+                // Save 
+                byte[] bytes = wwwFile.bytes;
+                File.WriteAllBytes(localFileIndexPath, bytes);
+                yield return new WaitForSeconds(0.5f);
             }
         }
 
@@ -116,43 +159,77 @@ namespace AssetBundleTool
             while (!Caching.ready)
                 yield return null;
 
-            string filePath = System.IO.Path.Combine(m_AssetBundlesUrl, nameBundle);
-            WWW www = new WWW(filePath);
 
-            Debug.Log("AssetBundleManager.LoadBundle path: " + filePath);
+            string bundlePath = Path.Combine(m_AssetBundlesPersistentPath, nameBundle);
 
-            // Wait for download to complete
-            yield return www;
+            Debug.Log("<color=yellow>" + "[AssetBundleManager.RequestBundle] Checking bundle on path: " + bundlePath  + "</color>");
 
-            Debug.Log("AssetBundleManager.LoadBundle finish - bytesDownloaded: " + www.bytesDownloaded);
-
-            if ((www.bytesDownloaded > 0) && (www.assetBundle != null))
+            if (File.Exists(bundlePath))
             {
+                Debug.Log("<color=yellow>" + "[AssetBundleManager.RequestBundle] File exists: " + bundlePath + "</color>");
 
-                // Load and retrieve the AssetBundle
-                AssetBundle bundle = www.assetBundle;
-
-                // Load the object asynchronously
-                AssetBundleRequest request = bundle.LoadAllAssetsAsync();
+                // Create asset bundle from file
+                AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
+                AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
 
                 // Wait for completion
-                yield return request;
+                yield return requestLocal;
 
-                if (request.allAssets != null)
-                {
-                    ProcessAssetBundleRequest(request, nameBundle);                    
+                if(requestLocal.allAssets != null)
+                { 
+                    ProcessAssetBundleRequest(requestLocal, nameBundle);
                 }
-                else
-                {
-                    Debug.Log("Could not load objects in theatre bundle: ");
-                }
-
-                // Unload the AssetBundles compressed contents to conserve memory
-                bundle.Unload(false);
             }
+            else
+            {
 
-            // Frees the memory from the web stream
-            www.Dispose();
+                string filePath = Path.Combine(m_AssetBundlesUrl, nameBundle);
+                WWW www = new WWW(filePath);
+
+                //WWW.LoadFromCacheOrDownload(filePath, 1);
+
+                Debug.Log("AssetBundleManager.LoadBundle path: " + filePath);
+
+                // Wait for download to complete
+                yield return www;
+
+                Debug.Log("AssetBundleManager.LoadBundle finish - bytesDownloaded: " + www.bytesDownloaded);
+
+                if ((www.bytesDownloaded > 0) && (www.assetBundle != null))
+                {
+                    byte[] bytes = www.bytes;
+
+                    // Creates a new file, writes the specified byte array to the file, and then closes the file. 
+                    // If the target file already exists, it is overwritten.
+                    File.WriteAllBytes(bundlePath, bytes);
+
+                    yield return new WaitForSeconds(0.5f);
+
+                    // Load and retrieve the AssetBundle
+                    AssetBundle bundle = www.assetBundle;
+
+                    // Load the object asynchronously
+                    AssetBundleRequest request = bundle.LoadAllAssetsAsync();
+
+                    // Wait for completion
+                    yield return request;
+
+                    if (request.allAssets != null)
+                    {
+                        ProcessAssetBundleRequest(request, nameBundle);
+                    }
+                    else
+                    {
+                        Debug.Log("Could not load objects in theatre bundle: ");
+                    }
+
+                    // Unload the AssetBundles compressed contents to conserve memory
+                    bundle.Unload(false);
+                }
+
+                // Frees the memory from the web stream
+                www.Dispose();
+            }
         }
 
 
@@ -192,6 +269,6 @@ namespace AssetBundleTool
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
         }
-
+                
     }
 }

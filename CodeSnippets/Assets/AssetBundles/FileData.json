@@ -3,19 +3,22 @@
     {
       "ID": "zombunnyblue",
       "AndroidFile": "zombunnyblue.agt",
-      "IOSFile": ""
+      "IOSFile": "",
+      "BundleVersion": 1
 
     },
     {
       "ID": "zombunnygreen",
       "AndroidFile": "zombunnygreen.agt",
-      "IOSFile": ""
+      "IOSFile": "",
+      "BundleVersion": 1
 
     },
     {
       "ID": "zombunnypurple",
       "AndroidFile": "zombunnypurple.agt",
-      "IOSFile": ""
+      "IOSFile": "",
+      "BundleVersion": 1
 
     }
   ]      
