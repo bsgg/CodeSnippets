@@ -13,6 +13,7 @@ namespace AssetBundleTool
         public string AndroidFile;        
         public string IOSFile;
         public int BundleVersion;
+        public AssetBundleManager.EBundleAction BundleAction;
     }
 
     [Serializable]
@@ -27,12 +28,15 @@ namespace AssetBundleTool
 
     public class AssetBundleManager : MonoBehaviour
     {      
+        public enum EBundleAction { LOADFROMLOCAL, LOADFROMURL, UPGRADEURL };
 
         [SerializeField] private string m_AssetBundlesUrl = "beatrizcv.com//Data/AssetBundles/";
         [SerializeField] private string m_IndexFileData = "FileData.json";
-        [SerializeField] private FileData m_FileData;
 
-        [SerializeField] private FileData m_LocalFileData;
+        //[SerializeField] private FileData m_ServerFileData;
+        //[SerializeField] private FileData m_LocalFileData;
+
+        [SerializeField] private FileData m_FileData;
 
 
         [SerializeField] private List<GameObject> m_AssetBundleList;
@@ -106,13 +110,17 @@ namespace AssetBundleTool
         {
             m_FileData = new FileData();
 
+
+            FileData serverFile = new FileData();
+
+
             if (string.IsNullOrEmpty(m_IndexFileData))
             {
-                Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Index File Data is empty" + "</color>");
+                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Index File Data is empty" + "</color>");
                 yield return null;
             }
            
-
+            // Try to retrieve server index file data
             string filePath = Path.Combine(m_AssetBundlesUrl, m_IndexFileData);
             WWW wwwFile = new WWW(filePath);
             yield return wwwFile;
@@ -120,14 +128,16 @@ namespace AssetBundleTool
 
             if (!string.IsNullOrEmpty(jsonData))
             {
-                m_FileData = JsonUtility.FromJson<FileData>(jsonData);
+                serverFile = JsonUtility.FromJson<FileData>(jsonData);
             }
 
 
-            // Check if file index exist in persistent data
+            // Try to retrieve local index file data
             string localFileIndexPath = Path.Combine(m_AssetBundlesPersistentPath, m_IndexFileData);
             Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Retrieving index file data from local: " + localFileIndexPath + "</color>");
-            if (File.Exists(localFileIndexPath))
+
+
+            if (File.Exists(localFileIndexPath))// File exists
             {
                 // Retrive file
                 StreamReader reader = new StreamReader(localFileIndexPath);
@@ -138,13 +148,47 @@ namespace AssetBundleTool
 
                 if (!string.IsNullOrEmpty(text))
                 {
-                    m_LocalFileData = JsonUtility.FromJson<FileData>(text);
+                    FileData localFile = JsonUtility.FromJson<FileData>(text);
+
+                    if ((localFile.Data != null && serverFile.Data != null))
+                    {
+                        // Compare local and server file
+                        for (int iServer = 0; iServer < serverFile.Data.Count; iServer++)
+                        {
+                            string serverID = serverFile.Data[iServer].ID;
+                            int version = serverFile.Data[iServer].BundleVersion;
+
+                            for (int iLocal = 0; iLocal < localFile.Data.Count; iLocal++)
+                            {
+                                string localID = localFile.Data[iLocal].ID;
+                                int compare = string.Compare(localID, serverID,true);
+                                if (compare == 0) // same ID
+                                {
+                                    IndexFile index = new IndexFile();
+                                    index.ID = serverID;
+                                    index.AndroidFile = serverFile.Data[iServer].AndroidFile;
+                                    index.IOSFile = serverFile.Data[iServer].IOSFile;
+
+                                    // TODO: COMPARE VERSIONS
+                                    m_FileData.Data.Add(index);
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                 }
-            }else
+
+
+            }else // Doesn't exist, save the server one and take
             {
-                m_LocalFileData = m_FileData;
+                // Final file is from the server
+                m_FileData = serverFile;
+
+
                 Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
-                // Save 
+                // Save file taking the srever one
                 byte[] bytes = wwwFile.bytes;
                 File.WriteAllBytes(localFileIndexPath, bytes);
                 yield return new WaitForSeconds(0.5f);
