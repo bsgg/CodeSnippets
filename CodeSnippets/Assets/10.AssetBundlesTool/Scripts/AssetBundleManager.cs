@@ -57,6 +57,8 @@ namespace AssetBundleTool
 
         private IEnumerator LoadBundles()
         {
+            m_UI.Debug = "";
+
             // Persisten data asset bundle
             m_AssetBundlesPersistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles");
 
@@ -77,12 +79,13 @@ namespace AssetBundleTool
                 m_TotalBundlesToLoad = m_FileData.Data.Count;
                 if (m_FileData.Data.Count ==0)
                 {
-                    Debug.Log("<color=purple>" + "[AssetBundleManager] No Bundles to load: " + "</color>");
-
+                    m_UI.Debug += "Error: No Bundles to load";
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] No Bundles to load " + "</color>");
                 }
                 else
                 {
 
+                    m_UI.Debug += "Number files to load: " + m_FileData.Data.Count + "\n";
                     Debug.Log("<color=purple>" + "[AssetBundleManager] Number of files: " + m_FileData.Data.Count + "</color>");
 
                     for (int i = 0; i < m_FileData.Data.Count; i++)
@@ -91,6 +94,7 @@ namespace AssetBundleTool
                         yield return RequestBundle(m_FileData.Data[i]);
                     }
 
+                    m_UI.Debug += "Completed: " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + "\n";
                     Debug.Log("<color=purple>" + "[AssetBundleManager] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
                 }
 
@@ -190,6 +194,8 @@ namespace AssetBundleTool
                                         }
                                         else if (serverVersion > localVersion)
                                         {
+                                            m_UI.Debug += "Update for " + newIndex.ID + " Version " + serverVersion +"\n";
+
                                             Debug.Log("<color=purple>" + "[AssetBundleManager] There is a new update for: " + newIndex.ID + " Current Version:  " + localVersion + " New version " + serverVersion + " </color>");
 
                                             newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
@@ -247,11 +253,15 @@ namespace AssetBundleTool
                                     
                                     if (File.Exists(bundleLocalPath))// File exists
                                     {
+                                        m_UI.Debug += "There is an extra file in local (it will deleted): " + bundleLocalPath + "\n";
+
                                         Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath + " It Will be deleted. " + " </color>");
 
                                         File.Delete(bundleLocalPath);
                                     }else
                                     {
+                                        m_UI.Debug += "There is an extra file in local (it won't be deleted, the file doesn't exist): " + bundleLocalPath + "\n";
+
                                         Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath +" The file was not found in local " + "</color>");
                                     }
                                 }
@@ -276,6 +286,8 @@ namespace AssetBundleTool
                     m_FileData.Data[i].BundleAction = EBundleAction.LOADFROMSERVER;
                 }
 
+                m_UI.Debug += "Dowloading all files in: " + localFileIndexPath + "\n";
+
                 Debug.Log("<color=purple>" + "[AssetBundleManager] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
                 // Save file taking the srever one
                 byte[] bytes = wwwFile.bytes;
@@ -290,6 +302,8 @@ namespace AssetBundleTool
             string nameBundle = string.Empty;
 
 #if UNITY_ANDROID || UNITY_EDITOR
+
+           
             Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting Android Bundle: " + index.AndroidFile + "</color>");
             nameBundle = index.AndroidFile;
 
@@ -298,6 +312,8 @@ namespace AssetBundleTool
             Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting IOS Bundle: " + index.IOSFile + "</color>");
             nameBundle = index.IOSFile;
 #endif
+
+            m_UI.Debug += "Request " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + " : " + nameBundle + "\n";
 
             if (string.IsNullOrEmpty(nameBundle)) yield return null;
 
@@ -342,6 +358,8 @@ namespace AssetBundleTool
 
                 // Wait for download to complete
                 yield return www;
+
+                m_UI.Debug += "Download from server " + www.bytesDownloaded  + "\n";
 
                 Debug.Log("<color=purple>" + "[AssetBundleManager] Load from server bytesDownloaded: " + www.bytesDownloaded + "</color>");
 
@@ -416,6 +434,8 @@ namespace AssetBundleTool
             }
             catch (Exception e)
             {
+                m_UI.Debug += "ERROR: Failed to load asset bundle, reason " + e.Message + "\n";
+
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
         }                
