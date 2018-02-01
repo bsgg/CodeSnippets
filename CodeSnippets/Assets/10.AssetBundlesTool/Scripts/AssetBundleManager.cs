@@ -28,13 +28,14 @@ namespace AssetBundleTool
 
     public class AssetBundleManager : MonoBehaviour
     {      
-        public enum EBundleAction { LOADFROMLOCAL, LOADFROMURL, UPGRADEURL };
+        public enum EBundleAction { NONE, LOADFROMLOCAL, LOADFROMSERVER};
 
+        [Header("UI")]
+        [SerializeField] private AssetBundleUI m_UI;
+
+        [Header("Settings")]
         [SerializeField] private string m_AssetBundlesUrl = "beatrizcv.com//Data/AssetBundles/";
         [SerializeField] private string m_IndexFileData = "FileData.json";
-
-        //[SerializeField] private FileData m_ServerFileData;
-        //[SerializeField] private FileData m_LocalFileData;
 
         [SerializeField] private FileData m_FileData;
 
@@ -76,54 +77,50 @@ namespace AssetBundleTool
                 m_TotalBundlesToLoad = m_FileData.Data.Count;
                 if (m_FileData.Data.Count ==0)
                 {
-                    Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] 0 Bundles to load: " + "</color>");
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] No Bundles to load: " + "</color>");
 
                 }
                 else
                 {
 
-                    Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Number of files: " + m_FileData.Data.Count + "</color>");
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] Number of files: " + m_FileData.Data.Count + "</color>");
 
                     for (int i = 0; i < m_FileData.Data.Count; i++)
                     {
-#if UNITY_IOS
-                    Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Requesting IOS Bundle: " + m_FileData.Data[i].IOSFile + "</color>");
-                    yield return RequestBundle(m_FileData.Data[i].IOSFile);
 
-#elif UNITY_ANDROID || UNITY_EDITOR
-                        Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Requesting Android Bundle: " + m_FileData.Data[i].AndroidFile + "</color>");
-                        yield return RequestBundle(m_FileData.Data[i].AndroidFile);
-
-#endif
+                        yield return RequestBundle(m_FileData.Data[i]);
                     }
 
-                    Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
                 }
 
             }else
             {
-                Debug.Log("<color=yellow>" + "[AssetBundleManager.LoadBundles] No bundles to load: " + "</color>");
+                Debug.Log("<color=purple>" + "[AssetBundleManager] No bundles to load: " + "</color>");
             }
         }
 
+        /// <summary>
+        /// Routine to request and compare the index file data (local and server)
+        /// </summary>
+        /// <returns></returns>
         private IEnumerator RequestIndexDataFile()
         {
             m_FileData = new FileData();
-
-
             FileData serverFile = new FileData();
-
 
             if (string.IsNullOrEmpty(m_IndexFileData))
             {
-                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Index File Data is empty" + "</color>");
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Index File Data is empty" + "</color>");
                 yield return null;
             }
            
             // Try to retrieve server index file data
             string filePath = Path.Combine(m_AssetBundlesUrl, m_IndexFileData);
             WWW wwwFile = new WWW(filePath);
+
             yield return wwwFile;
+
             string jsonData = wwwFile.text;
 
             if (!string.IsNullOrEmpty(jsonData))
@@ -134,7 +131,7 @@ namespace AssetBundleTool
 
             // Try to retrieve local index file data
             string localFileIndexPath = Path.Combine(m_AssetBundlesPersistentPath, m_IndexFileData);
-            Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Retrieving index file data from local: " + localFileIndexPath + "</color>");
+            Debug.Log("<color=purple>" + "[AssetBundleManager] Retrieving index file data from local: " + localFileIndexPath + "</color>");
 
 
             if (File.Exists(localFileIndexPath))// File exists
@@ -144,7 +141,7 @@ namespace AssetBundleTool
                 string text = reader.ReadToEnd();
                 reader.Close();
 
-                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] Local file exits: " + text + "</color>");
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + text + "</color>");
 
                 if (!string.IsNullOrEmpty(text))
                 {
@@ -152,99 +149,205 @@ namespace AssetBundleTool
 
                     if ((localFile.Data != null && serverFile.Data != null))
                     {
-                        // Compare local and server file
+                        // Compare server files with local server
                         for (int iServer = 0; iServer < serverFile.Data.Count; iServer++)
-                        {
-                            string serverID = serverFile.Data[iServer].ID;
-                            int version = serverFile.Data[iServer].BundleVersion;
+                        { 
+                            IndexFile newIndex = new IndexFile();
+                            newIndex.ID = serverFile.Data[iServer].ID;
+                            newIndex.AndroidFile = serverFile.Data[iServer].AndroidFile;
+                            newIndex.IOSFile = serverFile.Data[iServer].IOSFile;
 
+
+                            bool fileFound = false;
                             for (int iLocal = 0; iLocal < localFile.Data.Count; iLocal++)
                             {
-                                string localID = localFile.Data[iLocal].ID;
-                                int compare = string.Compare(localID, serverID,true);
+                                int compare = string.Compare(localFile.Data[iLocal].ID, serverFile.Data[iServer].ID, true);
                                 if (compare == 0) // same ID
                                 {
-                                    IndexFile index = new IndexFile();
-                                    index.ID = serverID;
-                                    index.AndroidFile = serverFile.Data[iServer].AndroidFile;
-                                    index.IOSFile = serverFile.Data[iServer].IOSFile;
+                                    fileFound = true;
 
-                                    // TODO: COMPARE VERSIONS
-                                    m_FileData.Data.Add(index);
+                                    string bundleLocalPath = string.Empty;
 
+#if UNITY_IOS
+                                bundleLocalPath = Path.Combine(m_AssetBundlesPersistentPath, newIndex.IOSFile);
+
+#elif UNITY_ANDROID || UNITY_EDITOR
+
+                                    bundleLocalPath = Path.Combine(m_AssetBundlesPersistentPath, newIndex.AndroidFile);
+#endif
+
+                                    newIndex.BundleVersion = serverFile.Data[iServer].BundleVersion;
+
+                                    // Check if file exists in local, 
+                                    if (File.Exists(bundleLocalPath))// File exists
+                                    {
+                                        int localVersion = localFile.Data[iLocal].BundleVersion;
+                                        int serverVersion = serverFile.Data[iServer].BundleVersion;
+                                        if (localVersion == serverVersion)
+                                        {
+                                            newIndex.BundleAction = EBundleAction.LOADFROMLOCAL;
+
+                                        }
+                                        else if (serverVersion > localVersion)
+                                        {
+                                            Debug.Log("<color=purple>" + "[AssetBundleManager] There is a new update for: " + newIndex.ID + " Current Version:  " + localVersion + " New version " + serverVersion + " </color>");
+
+                                            newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
+
+                                            // Remove file from local
+                                            File.Delete(bundleLocalPath);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // File doesn't exists in local, load form server
+                                        newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
+                                    }
+
+                                    
                                     break;
                                 }
                             }
+
+                            // File doesn't exist, load from server
+                            if (!fileFound)
+                            {
+                                newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
+                            }
+
+                            m_FileData.Data.Add(newIndex);
                         }
+
+                        // Check if there is any extra files in local
+                        if (localFile.Data.Count > serverFile.Data.Count)
+                        {
+                            for (int iLocal = 0; iLocal< localFile.Data.Count; iLocal++)
+                            {
+                                bool found = false;
+                                string bundleLocalPath = string.Empty;
+#if UNITY_IOS
+                                bundleLocalPath = Path.Combine(m_AssetBundlesPersistentPath, localFile.Data[iLocal].IOSFile);
+
+#elif UNITY_ANDROID || UNITY_EDITOR
+
+                                bundleLocalPath = Path.Combine(m_AssetBundlesPersistentPath, localFile.Data[iLocal].AndroidFile);
+#endif
+                                for (int iServer = 0; iServer < serverFile.Data.Count; iServer++)
+                                {
+                                    int compare = string.Compare(localFile.Data[iLocal].ID, serverFile.Data[iServer].ID, true);
+                                    if (compare == 0) // same ID
+                                    {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!found)
+                                {
+                                    
+                                    if (File.Exists(bundleLocalPath))// File exists
+                                    {
+                                        Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath + " It Will be deleted. " + " </color>");
+
+                                        File.Delete(bundleLocalPath);
+                                    }else
+                                    {
+                                        Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath +" The file was not found in local " + "</color>");
+                                    }
+                                }
+                            }
+                        }
+
+                        // Update local file
+                        byte[] bytes = wwwFile.bytes;
+                        File.WriteAllBytes(localFileIndexPath, bytes);
+                        yield return new WaitForSeconds(0.5f);
                     }
-
                 }
-
 
             }else // Doesn't exist, save the server one and take
             {
                 // Final file is from the server
                 m_FileData = serverFile;
 
+                // Set actions
+                for (int i=0; i< m_FileData.Data.Count; i++)
+                {
+                    m_FileData.Data[i].BundleAction = EBundleAction.LOADFROMSERVER;
+                }
 
-                Debug.Log("<color=blue>" + "[AssetBundleManager.LoadBundles] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
+                Debug.Log("<color=purple>" + "[AssetBundleManager] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
                 // Save file taking the srever one
                 byte[] bytes = wwwFile.bytes;
                 File.WriteAllBytes(localFileIndexPath, bytes);
                 yield return new WaitForSeconds(0.5f);
             }
         }
+        
 
-       
-        private IEnumerator RequestBundle(string nameBundle)
+        private IEnumerator RequestBundle(IndexFile index)
         {
+            string nameBundle = string.Empty;
+
+#if UNITY_ANDROID || UNITY_EDITOR
+            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting Android Bundle: " + index.AndroidFile + "</color>");
+            nameBundle = index.AndroidFile;
+
+
+#elif UNITY_IOS
+            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting IOS Bundle: " + index.IOSFile + "</color>");
+            nameBundle = index.IOSFile;
+#endif
+
             if (string.IsNullOrEmpty(nameBundle)) yield return null;
 
             while (!Caching.ready)
                 yield return null;
 
-
             string bundlePath = Path.Combine(m_AssetBundlesPersistentPath, nameBundle);
+            // Check action on this file
+            if (index.BundleAction == EBundleAction.LOADFROMLOCAL) // Load file from local path
+            {               
+                if (File.Exists(bundlePath))
+                {
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + bundlePath + "</color>");
 
-            Debug.Log("<color=yellow>" + "[AssetBundleManager.RequestBundle] Checking bundle on path: " + bundlePath  + "</color>");
+                    // Load from local
+                    // Create asset bundle from file
+                    AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
+                    AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
 
-            if (File.Exists(bundlePath))
-            {
-                Debug.Log("<color=yellow>" + "[AssetBundleManager.RequestBundle] File exists: " + bundlePath + "</color>");
+                    // Wait for completion
+                    yield return requestLocal;
 
-                // Create asset bundle from file
-                AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
-                AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
+                    if (requestLocal.allAssets != null)
+                    {
+                        ProcessAssetBundleRequest(requestLocal, nameBundle);
+                    }
 
-                // Wait for completion
-                yield return requestLocal;
-
-                if(requestLocal.allAssets != null)
-                { 
-                    ProcessAssetBundleRequest(requestLocal, nameBundle);
+                }
+                else
+                {
+                    // If in this point (this should not happens) the file doesn't exit, set action to load from server
+                    index.BundleAction = EBundleAction.LOADFROMSERVER;
                 }
             }
-            else
+
+
+            if (index.BundleAction == EBundleAction.LOADFROMSERVER)
             {
 
                 string filePath = Path.Combine(m_AssetBundlesUrl, nameBundle);
                 WWW www = new WWW(filePath);
 
-                //WWW.LoadFromCacheOrDownload(filePath, 1);
-
-                Debug.Log("AssetBundleManager.LoadBundle path: " + filePath);
-
                 // Wait for download to complete
                 yield return www;
 
-                Debug.Log("AssetBundleManager.LoadBundle finish - bytesDownloaded: " + www.bytesDownloaded);
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Load from server bytesDownloaded: " + www.bytesDownloaded + "</color>");
 
                 if ((www.bytesDownloaded > 0) && (www.assetBundle != null))
                 {
                     byte[] bytes = www.bytes;
-
-                    // Creates a new file, writes the specified byte array to the file, and then closes the file. 
-                    // If the target file already exists, it is overwritten.
                     File.WriteAllBytes(bundlePath, bytes);
 
                     yield return new WaitForSeconds(0.5f);
@@ -264,15 +367,15 @@ namespace AssetBundleTool
                     }
                     else
                     {
-                        Debug.Log("Could not load objects in theatre bundle: ");
-                    }
 
+                        Debug.Log("<color=purple>" + "[AssetBundleManager] Could not load from asset bundle" + "</color>");
+                    }
                     // Unload the AssetBundles compressed contents to conserve memory
                     bundle.Unload(false);
                 }
-
                 // Frees the memory from the web stream
                 www.Dispose();
+
             }
         }
 
@@ -296,14 +399,17 @@ namespace AssetBundleTool
                     AssetObject asset = go.GetComponent<AssetObject>();
                     if (asset  != null)
                     {
-                        Debug.Log("AssetObject NOT NULL " + asset.NameObject);
                         if (asset.MetaData != null)
                         {
-                            Debug.Log("AssetObject  asset.TextAsset: " + asset.MetaData.text);
+                            // DO ACTION
+
+                        }else
+                        {
+                            Debug.Log("<color=purple>" + "[AssetBundleManager] AssetObject Metadata not found in: " + assetID + "</color>");
                         }
                     }else
                     {
-                        Debug.Log("AssetObject NULL ");
+                        Debug.Log("<color=purple>" + "[AssetBundleManager] AssetObject not found in: " + assetID + "</color>");
                     }
                 
                 }
@@ -312,7 +418,6 @@ namespace AssetBundleTool
             {
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
-        }
-                
+        }                
     }
 }
