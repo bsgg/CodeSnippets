@@ -35,29 +35,7 @@ namespace UtilityCurves
 
 
             ShowDirections();
-            Handles.DrawBezier(p0, p3, p1, p2, Color.white, null, 2f);
-
-
-
-            /*Handles.color = Color.white;
-            Vector3 lineStart = m_Curve.GetPoint(0f);
-
-            Handles.color = Color.green;
-            Handles.DrawLine(lineStart, lineStart + m_Curve.GetDirection(0f));
-            for (int i = 1; i <= m_LineSteps; i++)
-            {
-                float tParam = (i / (float)m_LineSteps);
-
-                Vector3 lineEnd = m_Curve.GetPoint(tParam);
-
-                Handles.color = Color.white;
-                Handles.DrawLine(lineStart, lineEnd);
-
-                Handles.color = Color.green;
-                Handles.DrawLine(lineEnd, lineEnd + m_Curve.GetDirection(tParam));
-
-                lineStart = lineEnd;
-            }*/
+            Handles.DrawBezier(p0, p3, p1, p2, Color.white, null, 2f);            
         }
 
         private Vector3 ShowPoint(int index)

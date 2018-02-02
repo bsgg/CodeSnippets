@@ -11,6 +11,13 @@ namespace UtilityCurves
         [SerializeField]
         private Vector3[] m_Points;
 
+        public Vector3[] Points
+        {
+            get
+            {
+                return m_Points;
+            }
+        }
 
         [SerializeField]
         private BezierControlPointMode[] m_Modes;

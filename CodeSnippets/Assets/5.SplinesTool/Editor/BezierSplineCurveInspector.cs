@@ -21,6 +21,7 @@ namespace UtilityCurves
 
         private int m_SelectedIndex = -1;
 
+
         private static Color[] m_ModeColors = 
         {
             Color.white,
@@ -53,6 +54,19 @@ namespace UtilityCurves
                 Undo.RecordObject(m_Spline, "Add Curve");
                 m_Spline.AddCurve();
                 EditorUtility.SetDirty(m_Spline);
+            }
+
+
+            if (GUILayout.Button("Generate Ref points"))
+            {
+                for (int i = 0; i < m_Spline.Points.Length; i++)
+                {                    
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    go.name = "ReferencePoint";
+                    go.transform.parent = m_Spline.transform;
+                    go.transform.localPosition = m_Spline.Points[i];
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                }
             }
         }
 

@@ -42,18 +42,18 @@ namespace UtilityCurves
 
             if (m_GeneratePoints)
             {
-                int nPoints = 5;
-                float progress = 0.0f;
-                float section = m_Duration / nPoints;
-                for (int i=0; i< nPoints; i++)
+                //int nPoints = 5;
+                //float progress = 0.0f;
+                //float section = 1 / m_Duration;
+                for (int i=0; i< m_Spline.Points.Length; i++)
                 {
-                    Vector3 position = m_Spline.GetPoint(progress);
+                    //Vector3 position = m_Spline.GetPoint(progress);
 
                     GameObject obj = Instantiate(m_ReferenceObjectPrefab);
                     obj.transform.parent = m_Spline.transform;
-                    obj.transform.localPosition = position;
+                    obj.transform.localPosition = m_Spline.Points[i];
 
-                    progress += section;
+                    //progress += section;
                 }
 
             }
