@@ -39,7 +39,6 @@ namespace AssetBundleTool
 
         [SerializeField] private FileData m_FileData;
 
-
         [SerializeField] private List<GameObject> m_AssetBundleList;
         [SerializeField] private Transform m_AssetBundleParent;
 
@@ -47,17 +46,15 @@ namespace AssetBundleTool
         private int m_TotalBundlesToLoad;
 
         private string m_AssetBundlesPersistentPath;
-
-
-        private void Start()
+        
+        public void LoadBundle()
         {
-            StartCoroutine(LoadBundles());
-
+            StartCoroutine(LoadBundlesRoutine());
         }
 
-        private IEnumerator LoadBundles()
+        private IEnumerator LoadBundlesRoutine()
         {
-            m_UI.Debug = "";
+            Utility.UICodeSnippets.Instance.Log = "";
 
             // Persisten data asset bundle
             m_AssetBundlesPersistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles");
@@ -72,36 +69,33 @@ namespace AssetBundleTool
             m_TotalBundlesToLoad = 0;
             m_AssetBundleList = new List<GameObject>();
 
+            m_FileData = new FileData();
+
             yield return RequestIndexDataFile();
-
-            if (m_FileData.Data != null)
+            
+            m_TotalBundlesToLoad = m_FileData.Data.Count;
+            if (m_FileData.Data.Count ==0)
             {
-                m_TotalBundlesToLoad = m_FileData.Data.Count;
-                if (m_FileData.Data.Count ==0)
-                {
-                    m_UI.Debug += "Error: No Bundles to load";
-                    Debug.Log("<color=purple>" + "[AssetBundleManager] No Bundles to load " + "</color>");
-                }
-                else
-                {
-
-                    m_UI.Debug += "Number files to load: " + m_FileData.Data.Count + "\n";
-                    Debug.Log("<color=purple>" + "[AssetBundleManager] Number of files: " + m_FileData.Data.Count + "</color>");
-
-                    for (int i = 0; i < m_FileData.Data.Count; i++)
-                    {
-
-                        yield return RequestBundle(m_FileData.Data[i]);
-                    }
-
-                    m_UI.Debug += "Completed: " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + "\n";
-                    Debug.Log("<color=purple>" + "[AssetBundleManager] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
-                }
-
-            }else
-            {
-                Debug.Log("<color=purple>" + "[AssetBundleManager] No bundles to load: " + "</color>");
+                Utility.UICodeSnippets.Instance.Log += "<color=red>" + "There are (0) asset bundles to load" + "\n</color>";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] No Bundles to load " + "</color>");
             }
+            else
+            {
+
+                Utility.UICodeSnippets.Instance.Log += "There are ("+ m_FileData.Data.Count + ") asset bundles to load" + "\n";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Number of files: " + m_FileData.Data.Count + "</color>");
+
+                for (int i = 0; i < m_FileData.Data.Count; i++)
+                {
+
+                    yield return RequestBundle(m_FileData.Data[i]);
+                }
+
+                Utility.UICodeSnippets.Instance.Log += "Completed: " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + "\n";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
+            }
+
+            
         }
 
         /// <summary>
@@ -110,15 +104,12 @@ namespace AssetBundleTool
         /// <returns></returns>
         private IEnumerator RequestIndexDataFile()
         {
-            m_FileData = new FileData();
-            FileData serverFile = new FileData();
-
             if (string.IsNullOrEmpty(m_IndexFileData))
             {
                 Debug.Log("<color=purple>" + "[AssetBundleManager] Index File Data is empty" + "</color>");
                 yield return null;
             }
-           
+
             // Try to retrieve server index file data
             string filePath = Path.Combine(m_AssetBundlesUrl, m_IndexFileData);
             WWW wwwFile = new WWW(filePath);
@@ -127,9 +118,25 @@ namespace AssetBundleTool
 
             string jsonData = wwwFile.text;
 
+
+            FileData serverFile = new FileData();
             if (!string.IsNullOrEmpty(jsonData))
             {
-                serverFile = JsonUtility.FromJson<FileData>(jsonData);
+                try
+                {
+                    serverFile = JsonUtility.FromJson<FileData>(jsonData);
+                }
+                catch (Exception e)
+                {
+                    Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: Malformed index JSON SERVER File" + "\n</color>";
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] ERROR: Malformed index JSON SERVER File" + "</color>");
+                }
+            }else
+            {
+                Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: File index data JSON is empty " +  "\n</color>";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] ERROR: File index data JSON is empty" + "</color>");
+
+                yield return null;
             }
 
 
@@ -137,19 +144,28 @@ namespace AssetBundleTool
             string localFileIndexPath = Path.Combine(m_AssetBundlesPersistentPath, m_IndexFileData);
             Debug.Log("<color=purple>" + "[AssetBundleManager] Retrieving index file data from local: " + localFileIndexPath + "</color>");
 
-
             if (File.Exists(localFileIndexPath))// File exists
             {
+                Utility.UICodeSnippets.Instance.Log += "Found local index file in local folder: " + localFileIndexPath + "\n";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Found local index file in local folder: " + localFileIndexPath + "</color>");
+
                 // Retrive file
                 StreamReader reader = new StreamReader(localFileIndexPath);
                 string text = reader.ReadToEnd();
                 reader.Close();
 
-                Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + text + "</color>");
-
                 if (!string.IsNullOrEmpty(text))
                 {
-                    FileData localFile = JsonUtility.FromJson<FileData>(text);
+                    FileData localFile = new FileData();
+                    try
+                    {
+                        localFile = JsonUtility.FromJson<FileData>(text);
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: Malformed index JSON LOCAL File" + "\n</color>";
+                        Debug.Log("<color=purple>" + "[AssetBundleManager] ERROR: Malformed index JSON LOCAL File" + "</color>");
+                    }
 
                     if ((localFile.Data != null && serverFile.Data != null))
                     {
@@ -194,9 +210,9 @@ namespace AssetBundleTool
                                         }
                                         else if (serverVersion > localVersion)
                                         {
-                                            m_UI.Debug += "Update for " + newIndex.ID + " Version " + serverVersion +"\n";
+                                            Utility.UICodeSnippets.Instance.Log += "AssetBundle " + newIndex.ID + " New Bundle Version " + serverVersion +"\n";
 
-                                            Debug.Log("<color=purple>" + "[AssetBundleManager] There is a new update for: " + newIndex.ID + " Current Version:  " + localVersion + " New version " + serverVersion + " </color>");
+                                            Debug.Log("<color=purple>" + "[AssetBundleManager] AssetBundle: " + newIndex.ID + " Current Version:  " + localVersion + " New Bundle Version " + serverVersion + " </color>");
 
                                             newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
 
@@ -209,7 +225,6 @@ namespace AssetBundleTool
                                         // File doesn't exists in local, load form server
                                         newIndex.BundleAction = EBundleAction.LOADFROMSERVER;
                                     }
-
                                     
                                     break;
                                 }
@@ -253,16 +268,16 @@ namespace AssetBundleTool
                                     
                                     if (File.Exists(bundleLocalPath))// File exists
                                     {
-                                        m_UI.Debug += "There is an extra file in local (it will deleted): " + bundleLocalPath + "\n";
+                                        Utility.UICodeSnippets.Instance.Log += "Unnecessary AssetBundle found in local folder: " + bundleLocalPath + "\n";
 
-                                        Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath + " It Will be deleted. " + " </color>");
+                                        Debug.Log("<color=purple>" + "[AssetBundleManager] Unnecessary AssetBundle found in local folder: " + bundleLocalPath + " </color>");
 
                                         File.Delete(bundleLocalPath);
                                     }else
                                     {
-                                        m_UI.Debug += "There is an extra file in local (it won't be deleted, the file doesn't exist): " + bundleLocalPath + "\n";
+                                        Utility.UICodeSnippets.Instance.Log += "Unnecessary AssetBundle found in local folder: (unnable to delete it): " + bundleLocalPath + "\n";
 
-                                        Debug.Log("<color=purple>" + "[AssetBundleManager] There is an extra file in local: " + bundleLocalPath +" The file was not found in local " + "</color>");
+                                        Debug.Log("<color=purple>" + "[AssetBundleManager] Unnecessary AssetBundle found in local folder: (unnable to delete it: " + bundleLocalPath + "</color>");
                                     }
                                 }
                             }
@@ -286,9 +301,9 @@ namespace AssetBundleTool
                     m_FileData.Data[i].BundleAction = EBundleAction.LOADFROMSERVER;
                 }
 
-                m_UI.Debug += "Dowloading all files in: " + localFileIndexPath + "\n";
+                Utility.UICodeSnippets.Instance.Log += "No files found in local. Files will be downloaded from the server"+ "\n";
 
-                Debug.Log("<color=purple>" + "[AssetBundleManager] File local index Doesn't exist saving... " + localFileIndexPath + "</color>");
+                Debug.Log("<color=purple>" + "[AssetBundleManager] No files found in local. Files will be downloaded from the server" + "</color>");
                 // Save file taking the srever one
                 byte[] bytes = wwwFile.bytes;
                 File.WriteAllBytes(localFileIndexPath, bytes);
@@ -302,18 +317,13 @@ namespace AssetBundleTool
             string nameBundle = string.Empty;
 
 #if UNITY_ANDROID || UNITY_EDITOR
-
-           
-            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting Android Bundle: " + index.AndroidFile + "</color>");
             nameBundle = index.AndroidFile;
-
-
 #elif UNITY_IOS
-            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting IOS Bundle: " + index.IOSFile + "</color>");
             nameBundle = index.IOSFile;
 #endif
 
-            m_UI.Debug += "Request " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + " : " + nameBundle + "\n";
+            Utility.UICodeSnippets.Instance.Log += "Requesting " +  m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + " : " + nameBundle + "\n";
+            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting " +  m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + " : " + nameBundle + " </color>");
 
             if (string.IsNullOrEmpty(nameBundle)) yield return null;
 
@@ -359,7 +369,7 @@ namespace AssetBundleTool
                 // Wait for download to complete
                 yield return www;
 
-                m_UI.Debug += "Download from server " + www.bytesDownloaded  + "\n";
+                Utility.UICodeSnippets.Instance.Log += "Download from server " + www.bytesDownloaded  + "\n";
 
                 Debug.Log("<color=purple>" + "[AssetBundleManager] Load from server bytesDownloaded: " + www.bytesDownloaded + "</color>");
 
@@ -434,7 +444,7 @@ namespace AssetBundleTool
             }
             catch (Exception e)
             {
-                m_UI.Debug += "ERROR: Failed to load asset bundle, reason " + e.Message + "\n";
+                Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: Failed to load asset bundle, reason " + e.Message + "\n</color>";
 
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
