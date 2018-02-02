@@ -46,18 +46,102 @@ namespace AssetBundleTool
         private int m_TotalBundlesToLoad;
 
         private string m_AssetBundlesPersistentPath;
+        private int m_Progress = 0;
         
-        public void LoadBundle()
+
+        private void Start()
+        {
+            // Persisten data asset bundle
+            m_AssetBundlesPersistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles");
+
+            m_UI.Messages = "";
+            m_UI.RemoveButton.interactable = true;
+            m_UI.DownloadButton.interactable = true;
+        }
+
+        public void LoadBundles()
         {
             StartCoroutine(LoadBundlesRoutine());
         }
 
+        public void RemoveBundles()
+        { 
+            StartCoroutine(Remove());
+        }
+
+        private IEnumerator Remove()
+        {
+            m_UI.RemoveButton.interactable = false;
+            m_UI.DownloadButton.interactable = false;
+
+            m_UI.Messages = "Removing bundles";
+
+            
+                if (Directory.Exists(m_AssetBundlesPersistentPath))
+                {
+                    string[] files = Directory.GetFiles(m_AssetBundlesPersistentPath);
+
+                    if (files != null)
+                    {
+                        m_UI.Messages = files.Length + " Files found";
+
+                        int nFilesDeleted = 0;
+                        for (int i = files.Length - 1; i >= 0; i--)
+                        {
+
+                            try
+                            {
+                                File.Delete(files[i]);
+
+                            }
+                            catch (Exception e)
+                            {
+                            }
+                            yield return new WaitForSeconds(0.5f);
+                            nFilesDeleted++;
+
+                            m_UI.Messages = " Deleted (" + nFilesDeleted + "/" + files.Length + ")";
+                        }
+                    }
+
+                    yield return new WaitForSeconds(0.5f);
+
+                    // Remove from scene
+                    if (m_AssetBundleList != null)
+                    {
+                        for (int i = m_AssetBundleList.Count - 1; i >= 0; i--)
+                        {
+                            //DestroyImmediate(m_AssetBundleList[i]);
+                        }
+                    }
+                    yield return new WaitForSeconds(0.5f);
+                    m_UI.Messages = "Action completed";
+                }
+                else
+                {
+                    m_UI.Messages = "Action completed, no files in local folder";
+                }
+
+            
+            m_UI.RemoveButton.interactable = true;
+            m_UI.DownloadButton.interactable = true;
+        }
+
+        private void UpdateProgressUI()
+        {
+            m_UI.Messages = "Loading bundles:" + m_Progress + "%";
+        }
+
+        #region Load
         private IEnumerator LoadBundlesRoutine()
         {
-            Utility.UICodeSnippets.Instance.Log = "";
+            m_UI.RemoveButton.interactable = false;
+            m_UI.DownloadButton.interactable = false;
 
-            // Persisten data asset bundle
-            m_AssetBundlesPersistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles");
+            m_Progress = 0;
+            UpdateProgressUI();
+
+            Utility.UICodeSnippets.Instance.Log = "";            
 
             // Create directory if doesn't exsit
             if (!Directory.Exists(m_AssetBundlesPersistentPath))
@@ -71,8 +155,11 @@ namespace AssetBundleTool
 
             m_FileData = new FileData();
 
+            m_Progress = 1;
+            UpdateProgressUI();
+
             yield return RequestIndexDataFile();
-            
+
             m_TotalBundlesToLoad = m_FileData.Data.Count;
             if (m_FileData.Data.Count ==0)
             {
@@ -81,21 +168,22 @@ namespace AssetBundleTool
             }
             else
             {
-
                 Utility.UICodeSnippets.Instance.Log += "There are ("+ m_FileData.Data.Count + ") asset bundles to load" + "\n";
                 Debug.Log("<color=purple>" + "[AssetBundleManager] Number of files: " + m_FileData.Data.Count + "</color>");
 
-                for (int i = 0; i < m_FileData.Data.Count; i++)
-                {
-
-                    yield return RequestBundle(m_FileData.Data[i]);
-                }
+                // Request Asset Bundles
+                yield return RequestAssetBundles();               
 
                 Utility.UICodeSnippets.Instance.Log += "Completed: " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + "\n";
                 Debug.Log("<color=purple>" + "[AssetBundleManager] Bundles Loaded: " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + "</color>");
             }
 
-            
+
+            m_Progress = 100;
+            UpdateProgressUI();
+            m_UI.RemoveButton.interactable = true;
+            m_UI.DownloadButton.interactable = true;
+
         }
 
         /// <summary>
@@ -115,6 +203,9 @@ namespace AssetBundleTool
             WWW wwwFile = new WWW(filePath);
 
             yield return wwwFile;
+
+            m_Progress = 3;
+            UpdateProgressUI();
 
             string jsonData = wwwFile.text;
 
@@ -309,104 +400,123 @@ namespace AssetBundleTool
                 File.WriteAllBytes(localFileIndexPath, bytes);
                 yield return new WaitForSeconds(0.5f);
             }
-        }
-        
 
-        private IEnumerator RequestBundle(IndexFile index)
+            m_Progress = 5;
+            UpdateProgressUI();
+        }        
+
+        private IEnumerator RequestAssetBundles()
         {
-            string nameBundle = string.Empty;
+            for (int i = 0; i < m_FileData.Data.Count; i++)
+            {
+                IndexFile index = m_FileData.Data[i];
+
+                string nameBundle = string.Empty;
 
 #if UNITY_ANDROID || UNITY_EDITOR
-            nameBundle = index.AndroidFile;
+                nameBundle = index.AndroidFile;
 #elif UNITY_IOS
-            nameBundle = index.IOSFile;
+                nameBundle = index.IOSFile;
 #endif
+                // Visual progress: From current progress to 98, 2% remain will be after all bundles were download
+                int auxProgress = 98 - m_Progress;
+                float section = auxProgress / m_TotalBundlesToLoad;// Section for each bundle
 
-            Utility.UICodeSnippets.Instance.Log += "Requesting " +  m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + " : " + nameBundle + "\n";
-            Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting " +  m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + " : " + nameBundle + " </color>");
 
-            if (string.IsNullOrEmpty(nameBundle)) yield return null;
+                Utility.UICodeSnippets.Instance.Log += "Requesting " + m_NumberBundlesLoaded + "/" + m_TotalBundlesToLoad + " : " + nameBundle + "\n";
+                Debug.Log("<color=purple>" + "[AssetBundleManager] Requesting " + m_NumberBundlesLoaded + " / " + m_TotalBundlesToLoad + " : " + nameBundle + " </color>");
 
-            while (!Caching.ready)
-                yield return null;
+                if (string.IsNullOrEmpty(nameBundle)) yield return null;
 
-            string bundlePath = Path.Combine(m_AssetBundlesPersistentPath, nameBundle);
-            // Check action on this file
-            if (index.BundleAction == EBundleAction.LOADFROMLOCAL) // Load file from local path
-            {               
-                if (File.Exists(bundlePath))
+                while (!Caching.ready)
+                    yield return null;
+
+                string bundlePath = Path.Combine(m_AssetBundlesPersistentPath, nameBundle);
+                // Check action on this file
+                if (index.BundleAction == EBundleAction.LOADFROMLOCAL) // Load file from local path
                 {
-                    Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + bundlePath + "</color>");
-
-                    // Load from local
-                    // Create asset bundle from file
-                    AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
-                    AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
-
-                    // Wait for completion
-                    yield return requestLocal;
-
-                    if (requestLocal.allAssets != null)
+                    if (File.Exists(bundlePath))
                     {
-                        ProcessAssetBundleRequest(requestLocal, nameBundle);
-                    }
+                        Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + bundlePath + "</color>");
 
-                }
-                else
-                {
-                    // If in this point (this should not happens) the file doesn't exit, set action to load from server
-                    index.BundleAction = EBundleAction.LOADFROMSERVER;
-                }
-            }
+                        // Load from local
+                        // Create asset bundle from file
+                        AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
+                        AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
 
+                        // Wait for completion
+                        yield return requestLocal;
 
-            if (index.BundleAction == EBundleAction.LOADFROMSERVER)
-            {
+                        if (requestLocal.allAssets != null)
+                        {
+                            ProcessAssetBundleRequest(requestLocal, nameBundle);
+                        }
 
-                string filePath = Path.Combine(m_AssetBundlesUrl, nameBundle);
-                WWW www = new WWW(filePath);
-
-                // Wait for download to complete
-                yield return www;
-
-                Utility.UICodeSnippets.Instance.Log += "Download from server " + www.bytesDownloaded  + "\n";
-
-                Debug.Log("<color=purple>" + "[AssetBundleManager] Load from server bytesDownloaded: " + www.bytesDownloaded + "</color>");
-
-                if ((www.bytesDownloaded > 0) && (www.assetBundle != null))
-                {
-                    byte[] bytes = www.bytes;
-                    File.WriteAllBytes(bundlePath, bytes);
-
-                    yield return new WaitForSeconds(0.5f);
-
-                    // Load and retrieve the AssetBundle
-                    AssetBundle bundle = www.assetBundle;
-
-                    // Load the object asynchronously
-                    AssetBundleRequest request = bundle.LoadAllAssetsAsync();
-
-                    // Wait for completion
-                    yield return request;
-
-                    if (request.allAssets != null)
-                    {
-                        ProcessAssetBundleRequest(request, nameBundle);
+                        m_Progress += (int)section;
+                        m_Progress = Mathf.Clamp(m_Progress, 0, 100);
+                        UpdateProgressUI();
                     }
                     else
                     {
-
-                        Debug.Log("<color=purple>" + "[AssetBundleManager] Could not load from asset bundle" + "</color>");
+                        // If in this point (this should not happens) the file doesn't exit, set action to load from server
+                        index.BundleAction = EBundleAction.LOADFROMSERVER;
                     }
-                    // Unload the AssetBundles compressed contents to conserve memory
-                    bundle.Unload(false);
                 }
-                // Frees the memory from the web stream
-                www.Dispose();
 
+
+                if (index.BundleAction == EBundleAction.LOADFROMSERVER)
+                {
+
+                    string filePath = Path.Combine(m_AssetBundlesUrl, nameBundle);
+                    WWW www = new WWW(filePath);
+
+                    // Wait for download to complete
+                    yield return www;
+
+                    m_Progress += (int)section;
+                    m_Progress = Mathf.Clamp(m_Progress, 0, 100);
+                    UpdateProgressUI();
+
+                    Utility.UICodeSnippets.Instance.Log += "Download from server " + www.bytesDownloaded + "\n";
+
+                    Debug.Log("<color=purple>" + "[AssetBundleManager] Load from server bytesDownloaded: " + www.bytesDownloaded + "</color>");
+
+                    if ((www.bytesDownloaded > 0) && (www.assetBundle != null))
+                    {
+                        byte[] bytes = www.bytes;
+                        File.WriteAllBytes(bundlePath, bytes);
+
+                        yield return new WaitForSeconds(0.5f);
+
+                        // Load and retrieve the AssetBundle
+                        AssetBundle bundle = www.assetBundle;
+
+                        // Load the object asynchronously
+                        AssetBundleRequest request = bundle.LoadAllAssetsAsync();
+
+                        // Wait for completion
+                        yield return request;
+
+                        if (request.allAssets != null)
+                        {
+                            ProcessAssetBundleRequest(request, nameBundle);
+                        }
+                        else
+                        {
+
+                            Debug.Log("<color=purple>" + "[AssetBundleManager] Could not load from asset bundle" + "</color>");
+                        }
+                        // Unload the AssetBundles compressed contents to conserve memory
+                        bundle.Unload(false);
+                    }
+                    // Frees the memory from the web stream
+                    www.Dispose();
+
+                }
             }
         }
 
+        #endregion Load
 
         private void ProcessAssetBundleRequest(AssetBundleRequest request, string assetID)
         {
@@ -419,6 +529,7 @@ namespace AssetBundleTool
                 {
                     GameObject go = o as GameObject;
                     GameObject instantiatedGO = Instantiate(go);
+                    instantiatedGO.transform.parent = m_AssetBundleParent;
 
                     m_NumberBundlesLoaded++;
                     m_AssetBundleList.Add(go);
@@ -448,6 +559,10 @@ namespace AssetBundleTool
 
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
-        }                
+        }
+
+        #region Remove
+
+        #endregion Remove
     }
 }
