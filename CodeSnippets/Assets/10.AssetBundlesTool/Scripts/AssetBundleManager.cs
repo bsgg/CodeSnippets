@@ -14,6 +14,7 @@ namespace AssetBundleTool
         public string IOSFile;
         public int BundleVersion;
         public AssetBundleManager.EBundleAction BundleAction;
+        public GameObject BundleObject;
     }
 
     [Serializable]
@@ -39,7 +40,7 @@ namespace AssetBundleTool
 
         [SerializeField] private FileData m_FileData;
 
-        [SerializeField] private List<GameObject> m_AssetBundleList;
+        //[SerializeField] private List<GameObject> m_AssetBundleList;
         [SerializeField] private Transform m_AssetBundleParent;
 
         private int m_NumberBundlesLoaded;
@@ -57,11 +58,31 @@ namespace AssetBundleTool
             m_UI.Messages = "";
             m_UI.RemoveButton.interactable = true;
             m_UI.DownloadButton.interactable = true;
+
+            Utility.UICodeSnippets.Instance.Log = "";
+
+            // Create directory if doesn't exsit
+            if (!Directory.Exists(m_AssetBundlesPersistentPath))
+            {
+                Directory.CreateDirectory(m_AssetBundlesPersistentPath);
+            }
+
+            m_NumberBundlesLoaded = 0;
+            m_TotalBundlesToLoad = 0;
+
+            m_FileData = new FileData();
         }
 
         public void LoadBundles()
         {
-            StartCoroutine(LoadBundlesRoutine());
+            // None bundles loaded
+            if (m_NumberBundlesLoaded == 0)
+            {
+                StartCoroutine(LoadBundlesRoutine());
+            }else
+            {
+                m_UI.Messages = "All bundles downloaded";
+            }
         }
 
         public void RemoveBundles()
@@ -69,63 +90,7 @@ namespace AssetBundleTool
             StartCoroutine(Remove());
         }
 
-        private IEnumerator Remove()
-        {
-            m_UI.RemoveButton.interactable = false;
-            m_UI.DownloadButton.interactable = false;
-
-            m_UI.Messages = "Removing bundles";
-
-            
-                if (Directory.Exists(m_AssetBundlesPersistentPath))
-                {
-                    string[] files = Directory.GetFiles(m_AssetBundlesPersistentPath);
-
-                    if (files != null)
-                    {
-                        m_UI.Messages = files.Length + " Files found";
-
-                        int nFilesDeleted = 0;
-                        for (int i = files.Length - 1; i >= 0; i--)
-                        {
-
-                            try
-                            {
-                                File.Delete(files[i]);
-
-                            }
-                            catch (Exception e)
-                            {
-                            }
-                            yield return new WaitForSeconds(0.5f);
-                            nFilesDeleted++;
-
-                            m_UI.Messages = " Deleted (" + nFilesDeleted + "/" + files.Length + ")";
-                        }
-                    }
-
-                    yield return new WaitForSeconds(0.5f);
-
-                    // Remove from scene
-                    if (m_AssetBundleList != null)
-                    {
-                        for (int i = m_AssetBundleList.Count - 1; i >= 0; i--)
-                        {
-                            //DestroyImmediate(m_AssetBundleList[i]);
-                        }
-                    }
-                    yield return new WaitForSeconds(0.5f);
-                    m_UI.Messages = "Action completed";
-                }
-                else
-                {
-                    m_UI.Messages = "Action completed, no files in local folder";
-                }
-
-            
-            m_UI.RemoveButton.interactable = true;
-            m_UI.DownloadButton.interactable = true;
-        }
+        
 
         private void UpdateProgressUI()
         {
@@ -140,20 +105,6 @@ namespace AssetBundleTool
 
             m_Progress = 0;
             UpdateProgressUI();
-
-            Utility.UICodeSnippets.Instance.Log = "";            
-
-            // Create directory if doesn't exsit
-            if (!Directory.Exists(m_AssetBundlesPersistentPath))
-            {
-                Directory.CreateDirectory(m_AssetBundlesPersistentPath);
-            }
-
-            m_NumberBundlesLoaded = 0;
-            m_TotalBundlesToLoad = 0;
-            m_AssetBundleList = new List<GameObject>();
-
-            m_FileData = new FileData();
 
             m_Progress = 1;
             UpdateProgressUI();
@@ -432,34 +383,59 @@ namespace AssetBundleTool
                     yield return null;
 
                 string bundlePath = Path.Combine(m_AssetBundlesPersistentPath, nameBundle);
+
                 // Check action on this file
                 if (index.BundleAction == EBundleAction.LOADFROMLOCAL) // Load file from local path
                 {
-                    if (File.Exists(bundlePath))
+                    // Check if reload
+                    bool loadFromLocal = true;
+                    // Check if there is an existing element in memory
+                    if (index.BundleObject != null)
                     {
-                        Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + bundlePath + "</color>");
-
-                        // Load from local
-                        // Create asset bundle from file
-                        AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
-                        AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
-
-                        // Wait for completion
-                        yield return requestLocal;
-
-                        if (requestLocal.allAssets != null)
+                        // Different name, destroy existing
+                        if (index.ID != index.BundleObject.name)
                         {
-                            ProcessAssetBundleRequest(requestLocal, nameBundle);
+                            Destroy(index.BundleObject);
+                            yield return new WaitForEndOfFrame();
                         }
-
-                        m_Progress += (int)section;
-                        m_Progress = Mathf.Clamp(m_Progress, 0, 100);
-                        UpdateProgressUI();
+                        else
+                        {
+                            loadFromLocal = false;
+                        }
                     }
-                    else
+                    
+                    if (loadFromLocal)                    
                     {
-                        // If in this point (this should not happens) the file doesn't exit, set action to load from server
-                        index.BundleAction = EBundleAction.LOADFROMSERVER;
+                        
+                        if (File.Exists(bundlePath))
+                        {
+                            Debug.Log("<color=purple>" + "[AssetBundleManager] Local file exits: " + bundlePath + "</color>");
+
+                            // Load from local
+                            // Create asset bundle from file
+                            AssetBundle localBundle = AssetBundle.LoadFromFile(bundlePath);
+                            AssetBundleRequest requestLocal = localBundle.LoadAllAssetsAsync();
+
+                            // Wait for completion
+                            yield return requestLocal;
+
+                            if (requestLocal.allAssets != null)
+                            {
+                                index.BundleObject = ProcessAssetBundleRequest(requestLocal, index.ID);
+                            }
+
+                            // Unload the AssetBundles compressed contents to conserve memory
+                            localBundle.Unload(false);
+
+                            m_Progress += (int)section;
+                            m_Progress = Mathf.Clamp(m_Progress, 0, 100);
+                            UpdateProgressUI();
+                        }
+                        else
+                        {
+                            // If in this point (this should not happens) the file doesn't exit, set action to load from server
+                            index.BundleAction = EBundleAction.LOADFROMSERVER;
+                        }
                     }
                 }
 
@@ -499,7 +475,14 @@ namespace AssetBundleTool
 
                         if (request.allAssets != null)
                         {
-                            ProcessAssetBundleRequest(request, nameBundle);
+                            // Destroy existing object
+                            if (index.BundleObject != null)
+                            {
+                                Destroy(index.BundleObject);                                
+                            }
+                            yield return new WaitForEndOfFrame();
+
+                            index.BundleObject = ProcessAssetBundleRequest(request, nameBundle);
                         }
                         else
                         {
@@ -518,7 +501,7 @@ namespace AssetBundleTool
 
         #endregion Load
 
-        private void ProcessAssetBundleRequest(AssetBundleRequest request, string assetID)
+        private GameObject ProcessAssetBundleRequest(AssetBundleRequest request, string assetID)
         {
             Debug.Log(string.Format("Successfully loaded {0} objects", request.allAssets.Length));
 
@@ -529,10 +512,10 @@ namespace AssetBundleTool
                 {
                     GameObject go = o as GameObject;
                     GameObject instantiatedGO = Instantiate(go);
+                    instantiatedGO.name = assetID;
                     instantiatedGO.transform.parent = m_AssetBundleParent;
 
                     m_NumberBundlesLoaded++;
-                    m_AssetBundleList.Add(go);
 
                     // Retrieve Asset Object script
                     AssetObject asset = go.GetComponent<AssetObject>();
@@ -550,6 +533,8 @@ namespace AssetBundleTool
                     {
                         Debug.Log("<color=purple>" + "[AssetBundleManager] AssetObject not found in: " + assetID + "</color>");
                     }
+
+                    return instantiatedGO;
                 
                 }
             }
@@ -559,9 +544,74 @@ namespace AssetBundleTool
 
                 Debug.Log("Failed to load asset bundle, reason: " + e.Message);
             }
+
+            return null;
         }
 
         #region Remove
+
+        private IEnumerator Remove()
+        {
+            m_UI.RemoveButton.interactable = false;
+            m_UI.DownloadButton.interactable = false;
+
+            m_UI.Messages = "Removing bundles";
+
+            if (Directory.Exists(m_AssetBundlesPersistentPath))
+            {
+                string[] files = Directory.GetFiles(m_AssetBundlesPersistentPath);
+
+                if (files != null)
+                {
+                    m_UI.Messages = files.Length + " Files found";
+
+                    int nFilesDeleted = 0;
+                    for (int i = files.Length - 1; i >= 0; i--)
+                    {
+
+                        try
+                        {
+                            File.Delete(files[i]);
+
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                        yield return new WaitForSeconds(0.5f);
+                        nFilesDeleted++;
+
+                        m_UI.Messages = " Deleted (" + nFilesDeleted + "/" + files.Length + ")";
+                    }
+                }
+
+                yield return new WaitForSeconds(0.5f);
+
+                // Remove from scene
+                if ((m_FileData != null) && (m_FileData.Data != null))
+                {
+                    for (int i = m_FileData.Data.Count - 1; i >= 0; i--)
+                    {
+                        if (m_FileData.Data[i].BundleObject != null)
+                        {
+                            DestroyImmediate(m_FileData.Data[i].BundleObject);
+                            m_FileData.Data[i].BundleObject = null;
+                        }
+                    }
+                }
+
+                yield return new WaitForSeconds(0.5f);
+
+                m_UI.Messages = "Action completed";
+            }
+            else
+            {
+                m_UI.Messages = "Action completed, no files in local folder";
+            }
+
+            m_NumberBundlesLoaded = 0;
+            m_UI.RemoveButton.interactable = true;
+            m_UI.DownloadButton.interactable = true;
+        }
 
         #endregion Remove
     }
