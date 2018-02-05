@@ -17,11 +17,8 @@ namespace UtilityCurves
         [Header("UI")]
         [SerializeField] private Text m_Messages;
 
-
         [Header("Spline Settings")]
         [SerializeField] private BezierSpline m_Spline;
-        [SerializeField] private bool m_GeneratePoints = true;
-        [SerializeField] private GameObject m_ReferenceObjectPrefab;
 
         [Header("Movement Settings")]
         [SerializeField] private SplineWalkerMode m_Mode;
@@ -39,24 +36,7 @@ namespace UtilityCurves
             m_GoingForward = true;
 
             m_Messages.text = "Traveller Progress: " + m_Progress;
-
-            if (m_GeneratePoints)
-            {
-                //int nPoints = 5;
-                //float progress = 0.0f;
-                //float section = 1 / m_Duration;
-                for (int i=0; i< m_Spline.Points.Length; i++)
-                {
-                    //Vector3 position = m_Spline.GetPoint(progress);
-
-                    GameObject obj = Instantiate(m_ReferenceObjectPrefab);
-                    obj.transform.parent = m_Spline.transform;
-                    obj.transform.localPosition = m_Spline.Points[i];
-
-                    //progress += section;
-                }
-
-            }
+            
         }
 
         private void Update()

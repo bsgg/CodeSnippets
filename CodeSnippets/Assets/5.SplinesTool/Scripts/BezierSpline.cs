@@ -25,6 +25,8 @@ namespace UtilityCurves
         [SerializeField]
         private bool m_Loop;
 
+        [SerializeField] private List<GameObject> m_ReferencePoints = new List<GameObject>();
+
         public bool Loop
         {
             get
@@ -274,5 +276,45 @@ namespace UtilityCurves
                 EnforceMode(0);
             }
         }
+
+
+        public void RemoveReferecePoints()
+        {
+            if (m_ReferencePoints.Count > 0)
+            {
+                for (int i = (m_ReferencePoints.Count - 1); i >= 0; i--)
+                {
+                    if (Application.isEditor)
+                    {
+                        DestroyImmediate(m_ReferencePoints[i]);
+                    }
+                    else
+                    {
+                        Destroy(m_ReferencePoints[i]);
+                    }
+                }
+            }
+
+            m_ReferencePoints = new List<GameObject>();
+        }
+        public void AddReferencePoints()
+        {
+            RemoveReferecePoints();
+
+            for (int i = 0; i < m_Points.Length; i++)
+            {
+                if ((i % 3) == 0) // Only multiple of 3 are points, the rest are control points
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    go.name = "ReferencePoint_" + i;
+                    go.transform.parent = transform;
+                    go.transform.localPosition = m_Points[i];
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+
+                    m_ReferencePoints.Add(go);
+                }
+            }
+        }
     }
+
 }

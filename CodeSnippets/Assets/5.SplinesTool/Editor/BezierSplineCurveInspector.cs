@@ -57,16 +57,18 @@ namespace UtilityCurves
             }
 
 
-            if (GUILayout.Button("Generate Ref points"))
+            if (GUILayout.Button("Add reference points"))
             {
-                for (int i = 0; i < m_Spline.Points.Length; i++)
-                {                    
-                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    go.name = "ReferencePoint";
-                    go.transform.parent = m_Spline.transform;
-                    go.transform.localPosition = m_Spline.Points[i];
-                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                }
+                Undo.RecordObject(m_Spline, "Add Reference Points");
+                m_Spline.AddReferencePoints();
+                EditorUtility.SetDirty(m_Spline);
+            }
+
+            if (GUILayout.Button("Remove reference points"))
+            {
+                Undo.RecordObject(m_Spline, "Remove Reference Points");
+                m_Spline.RemoveReferecePoints();
+                EditorUtility.SetDirty(m_Spline);
             }
         }
 
@@ -109,7 +111,7 @@ namespace UtilityCurves
 
             Handles.color = m_ModeColors[(int) m_Spline.GetControlPointMode(index)];
 
-            if (Handles.Button(point, m_HandleRotation, size * m_HandleSize, size * m_PickSize, Handles.DotCap))
+            if (Handles.Button(point, m_HandleRotation, size * m_HandleSize, size * m_PickSize, Handles.DotHandleCap))
             {
                 m_SelectedIndex = index;
                 Repaint();
