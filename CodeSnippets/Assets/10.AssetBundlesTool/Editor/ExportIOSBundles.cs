@@ -12,7 +12,7 @@ namespace AssetBundleTool
         [MenuItem("AssetBundle/Build AssetBundles IOS")]
         static void BuildAllAssetBundles()
         {
-            string folder = Path.Combine(Application.dataPath, "AssetBundles");
+            string folder = Path.Combine(Application.dataPath, "10.AssetBundlesTool/AssetBundles");
             string directory = Path.Combine(folder, "IOS");
             if (!Directory.Exists(directory))
             {

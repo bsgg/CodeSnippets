@@ -18,195 +18,159 @@ namespace PolygoTool
 
     public class PolygonToolControl : MonoBehaviour
     {
-        [SerializeField]
-        private Material m_PolygonMaterial;
-        [SerializeField]
-        private GameObject m_PointObjectPrefab;
+        [Header("File Data")]
+        [SerializeField] private string m_DataFolder = "10.PolygonTool";
+        [SerializeField] private string m_FileName = "Polygon.dat";
+        [SerializeField] private PolygonToolUI m_UI;        
 
-        PolygonData m_PolygonData = new PolygonData();
+        [Header("Points Settings")]
+        [SerializeField] private Camera m_SceneCamera;
+        [SerializeField] private float m_MinDistanceToFirstPoint = 1.0f;
+        [SerializeField] private int m_MaxPoints = 50;
+        [SerializeField] private float m_DistanceToCamera = 0.0f;
 
-        List<GameObject> m_ListObjectPoints = new List<GameObject>();
+        [SerializeField] private Material m_PolygonMaterial;
+        [SerializeField] private GameObject m_PointObjectPrefab;
 
-        [SerializeField]
-        private float m_CollisionRadius = 1.0f;
-
-        [SerializeField]
-        private int m_MaxPoints = 50;
-
-        [SerializeField]
-        private float m_DistanceToCamera = 0.0f;
-
-        [SerializeField]
-        private bool m_LoadPolygon = true;
-
-        [SerializeField]
-        private PolygonToolUI m_ToolUI;
-
-        [SerializeField]
-        private KeyCode m_KeyMenu = KeyCode.Q;
-
-        private string m_LogTag = "<color=#008080ff>[PolygonToolControl]</color>";
-
-        private bool m_PolygonWasSaved = true;
-
-        [SerializeField]
-        private Camera m_Camera;
-
+        public enum EPolygonMode { NONE, SAVING, NEW, DELETE };
+        private EPolygonMode m_Mode = EPolygonMode.NONE;             
+        private PolygonData m_PolygonData;
+        private GameObject m_CurrentPolygon = null;
+        private List<GameObject> m_ListObjectPoints;
 
         private void Start()
         {
-            if (m_LoadPolygon)
+            m_PolygonData = new PolygonData();
+            m_ListObjectPoints = new List<GameObject>();
+
+            // Loads polygon from file
+            LoadPolygon(); 
+        }
+
+        /// <summary>
+        /// Loads polygon from folder
+        /// </summary>
+        /// <returns></returns>
+        public bool LoadPolygon()
+        {
+            // Check directory
+            string path = Path.Combine(Application.dataPath, m_DataFolder);
+            if (!Directory.Exists(path))
             {
-                LoadPolygon();
-                CreatePoints();
-                HidePoints();
-                m_ToolUI.Hide();
-                m_ToolUI.Message = "Polygon Tool";
-                m_PolygonWasSaved = true;
+                m_UI.Message = "Unable to load polygon. " + m_FileName + " not found";
+                Debug.Log("<color=purple>" + "Unable to load polygon. Folder doesn't exists " + "</color>");
+
+                Directory.CreateDirectory(path);
+
+                return false;
             }
+
+            // Check if file exists
+            string filePath = Path.Combine(path, m_FileName);
+            if (!File.Exists(filePath))
+            {
+                Debug.Log("<color=purple>" + "Unable to load polygon. " + filePath + " not found" +  "</color>");
+                m_UI.Message = "Unable to load polygon. " + m_FileName + " not found";
+                return false;
+            }
+
+            // Read file
+            using (var stream = new StreamReader(filePath))
+            {
+                string line = stream.ReadLine();
+
+                if (!string.IsNullOrEmpty(line))
+                {
+                    m_PolygonData = JsonUtility.FromJson<PolygonData>(line);
+
+                }
+                stream.Close();
+            }
+
+            if (m_PolygonData != null)
+            {
+                m_UI.Message = "Loading polygon";
+                Debug.Log("<color=purple>" + "Loading polygon"  + "</color>");
+
+                InstancePolygon();
+                InstancePoints();
+            }
+
+            return true;
         }
 
         private void Update()
         {
-            // Toggle menu
-            if (Input.GetKeyUp(m_KeyMenu))
+            if (m_Mode == EPolygonMode.NEW)
             {
-                m_ToolUI.Toggle();
-
-                if (m_ToolUI.IsVisible)
-                {
-                    if (m_PolygonData.ListVertices.Count > 0)
-                    {
-                        // Only delete
-                        m_ToolUI.StartButton.interactable = false;
-                        m_ToolUI.SaveButton.interactable = false;
-                        m_ToolUI.DeleteButton.interactable = true;
-                    }
-                    else
-                    {
-                        // Only start
-                        m_ToolUI.StartButton.interactable = true;
-                        m_ToolUI.SaveButton.interactable = false;
-                        m_ToolUI.DeleteButton.interactable = false;
-
-                    }
-
-                    if (m_ListObjectPoints.Count > 0)
-                    {
-                        // Show points, change buttons
-                        ShowPoints();
-                        m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
-                        m_ToolUI.HidePointsButton.gameObject.SetActive(true);
-                        m_ToolUI.ShowPointsButton.interactable = true;
-                        m_ToolUI.HidePointsButton.interactable = true;
-                    }
-                    else
-                    {
-                        HidePoints();
-                        m_ToolUI.ShowPointsButton.interactable = false;
-                        m_ToolUI.HidePointsButton.gameObject.SetActive(false);
-                    }
-                }
-                else
-                {
-                    // Always hide points
-                    HidePoints();
-
-                    // Polygon wasn't saved                     
-                    if (!m_PolygonWasSaved)
-                    {
-                        DeletePolygon();
-                    }
-                }
-
+                UpdatePointsOnScreen();
             }
-
-            if (m_Mode == EPolygonMode.CREATION)
-            {
-                HandlePointsMouseCreation();
-            }
-
         }
 
-        private void HandlePointsMouseCreation()
+        private void UpdatePointsOnScreen()
         {
             if (Input.GetMouseButtonUp(0))
             {
-                Debug.Log("Input.mousePosition: " + Input.mousePosition);
-
                 Vector3 pointMouse = new Vector3(Input.mousePosition.x, Input.mousePosition.y, m_DistanceToCamera);
-                Vector3 mouseToWorld = m_Camera.ScreenToWorldPoint(pointMouse);
+                Vector3 mouseToWorld = m_SceneCamera.ScreenToWorldPoint(pointMouse);
 
-                // mouseToWorld.z = m_DistanceToCamera;
-                Debug.Log("Input.mousePosition: " + pointMouse + " mouseToWorld: " + mouseToWorld);
-
-
-                // Debug.Log("Mouse to world: " + mouseToWorld);
+                //Debug.Log("Input.mousePosition: " + pointMouse + " mouseToWorld: " + mouseToWorld);
 
                 // Check if this point collides with the first point
                 bool collision = false;
-                if (m_PolygonData.ListVertices.Count > 0)
+                if (m_PolygonData.ListVertices.Count > 1)
                 {
                     float distance = Vector3.Distance(mouseToWorld, m_PolygonData.ListVertices[0]);
-
-                    Debug.Log("distance: " + distance);
-
-                    Debug.Log("m_PolygonData.ListVertices[0]: " + m_PolygonData.ListVertices[0] + " mouseToWorld: " + mouseToWorld);
-
+                    Debug.Log("<color=purple>" + "Distance to first point: " + distance + " MinDistance: " + m_MinDistanceToFirstPoint  +"</color>");
 
                     // Finish polygon
-                    if (distance <= m_CollisionRadius)
+                    if (distance <= m_MinDistanceToFirstPoint)
                     {
                         collision = true;
-                        m_Mode = EPolygonMode.NODE;
-                        CreatePolygon();
+                        m_Mode = EPolygonMode.SAVING;
 
-                        m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
-                        m_ToolUI.HidePointsButton.gameObject.SetActive(true);
+                        m_UI.Message = "Reach first point. Saving polygon.";
+                        // Create polygon
+                        InstancePolygon();
+                        SaveDataPolygon();
 
-                        m_ToolUI.StartButton.interactable = false;
-                        m_ToolUI.DeleteButton.interactable = true;
-                        m_ToolUI.SaveButton.interactable = true;
-
-                        m_ToolUI.Message = "Polygon closed, ready to be saved.";
+                        m_Mode = EPolygonMode.NONE;
                     }
                 }
 
                 if (!collision)
                 {
-
-
                     if (m_PolygonData.ListVertices.Count < m_MaxPoints)
                     {
                         m_PolygonData.ListVertices.Add(mouseToWorld);
+
+                        // Instance an object
+                        // Instantiating objects
                         GameObject obj = Instantiate(m_PointObjectPrefab, mouseToWorld, Quaternion.identity);
-                        obj.name = "PolygonPoint_" + m_PolygonData.ListVertices.Count;
+                        obj.name = "PolygonPoint_" + (m_PolygonData.ListVertices.Count-1);
                         m_ListObjectPoints.Add(obj);
                     }
                     else
                     {
                         // Reach maximun points
-                        Debug.unityLogger.Log(m_LogTag, " Reach maximun points: ");
+                        m_UI.Message = "Reach maximun points. Saving polygon.";
 
-                        m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
-                        m_ToolUI.HidePointsButton.gameObject.SetActive(true);
+                        // Create polygon
+                        m_Mode = EPolygonMode.SAVING;
 
-                        m_ToolUI.StartButton.interactable = false;
-                        m_ToolUI.DeleteButton.interactable = true;
-                        m_ToolUI.SaveButton.interactable = true;
+                        InstancePolygon();
+                        SaveDataPolygon();
 
-                        m_ToolUI.Message = "Reached maximun points. Polygon closed, ready to be saved.";
-
-                        m_Mode = EPolygonMode.NODE;
-                        CreatePolygon();
+                        m_Mode = EPolygonMode.NONE;
                     }
-
                 }
             }
         }
 
-
-        private void CreatePolygon()
+        /// <summary>
+        /// Creates polygon
+        /// </summary>
+        private void InstancePolygon()
         {
             Triangulator tr = new Triangulator(m_PolygonData.ListVertices);
             int[] indices = tr.Triangulate();
@@ -225,38 +189,48 @@ namespace PolygoTool
             msh.RecalculateNormals();
             msh.RecalculateBounds();
 
-
             m_CurrentPolygon = new GameObject("Polygon");
             m_CurrentPolygon.AddComponent<MeshRenderer>().material = m_PolygonMaterial;
             m_CurrentPolygon.AddComponent<MeshFilter>().mesh = msh;
             m_CurrentPolygon.layer = gameObject.layer;
         }
 
+        private void InstancePoints()
+        {
+            m_ListObjectPoints = new List<GameObject>();
+            if (m_PolygonData != null)
+            {
+                for (int i = 0; i < m_PolygonData.ListVertices.Count; i++)
+                {
+                    GameObject obj = Instantiate(m_PointObjectPrefab, m_PolygonData.ListVertices[i], Quaternion.identity);
+                    obj.name = "PolygonPoint_" + m_PolygonData.ListVertices.Count;
+                    m_ListObjectPoints.Add(obj);
+                }
+            }
+        }
+
         #region Buttons
 
-        private GameObject m_CurrentPolygon = null;
-
-        public enum EPolygonMode { NODE, CREATION };
-        private EPolygonMode m_Mode = EPolygonMode.NODE;
-
-        public void StartPolygon()
+        public void NewPolygon()
         {
             ResetPolygon();
+            m_UI.NewButton.interactable = false;
+            m_Mode = EPolygonMode.NONE;
 
-            m_PolygonWasSaved = false;
+            m_UI.Message = "Click anywhere to place a point";
 
-            m_ToolUI.StartButton.interactable = false;
-            StartCoroutine(WaitToStartCreate());
-
+            StartCoroutine(NewPolygonDelayed());
         }
 
-        private IEnumerator WaitToStartCreate()
+        private IEnumerator NewPolygonDelayed()
         {
             yield return new WaitForSeconds(0.3f);
-            m_Mode = EPolygonMode.CREATION;
+            m_Mode = EPolygonMode.NEW;
         }
 
-
+        /// <summary>
+        /// Reset current data
+        /// </summary>
         private void ResetPolygon()
         {
             // Clear mesh, vertices, objects
@@ -264,8 +238,8 @@ namespace PolygoTool
             {
                 Destroy(m_CurrentPolygon);
             }
-            m_PolygonData = new PolygonData();
 
+            m_PolygonData = new PolygonData();
             if (m_ListObjectPoints.Count > 0)
             {
                 for (int i = m_ListObjectPoints.Count - 1; i >= 0; i--)
@@ -274,59 +248,35 @@ namespace PolygoTool
                 }
             }
             m_ListObjectPoints = new List<GameObject>();
-
-        }
+        }        
 
         public void DeletePolygon()
         {
-            string path = Path.Combine(Application.dataPath, "ARWindowFiles");
-            string filePath = Path.Combine(path, "PolygonMask.dat");
+            m_Mode = EPolygonMode.DELETE;
+            string path = Path.Combine(Application.dataPath, m_DataFolder);
+            string filePath = Path.Combine(path, m_FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
             }
-
-            if (m_PolygonData.ListVertices != null && m_PolygonData.ListVertices.Count > 0)
-            {
-                m_ToolUI.Message = "Polygon and file data deleted.";
-
-                m_ToolUI.DeleteButton.interactable = false;
-
-                StopCoroutine(ResetMessage());
-                StartCoroutine(ResetMessage());
-            }
-            else
-            {
-
-                m_ToolUI.Message = "No polygon data found.";
-                StopCoroutine(ResetMessage());
-                StartCoroutine(ResetMessage());
-            }
-
-            m_ToolUI.StartButton.interactable = true;
-            m_ToolUI.SaveButton.interactable = false;
+            
             ResetPolygon();
+            m_UI.Message = "Polygon data deleted.";
 
+            m_Mode = EPolygonMode.NONE;
         }
 
-        private IEnumerator ResetMessage()
-        {
-            yield return new WaitForSeconds(3.0f);
-            m_ToolUI.Message = "Polygon Tool";
-        }
-
-
-        public void SavePolygon()
+        private void SaveDataPolygon()
         {
             // Check if file exists
-            string path = Path.Combine(Application.dataPath, "ARWindowFiles");
+            string path = Path.Combine(Application.dataPath, m_DataFolder);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
 
             // Check if file exists
-            string filePath = Path.Combine(path, "PolygonMask.dat");
+            string filePath = Path.Combine(path, m_FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -339,98 +289,10 @@ namespace PolygoTool
                 stream.Write(data);
                 stream.Close();
             }
-
-
-            Debug.unityLogger.Log(m_LogTag, " Polygon saved in " + filePath);
-            m_PolygonWasSaved = true;
-            m_ToolUI.SaveButton.interactable = false;
-            m_ToolUI.DeleteButton.interactable = true;
-            m_ToolUI.StartButton.interactable = false;
         }
-
-        public bool LoadPolygon()
-        {
-            string path = Path.Combine(Application.dataPath, "ARWindowFiles");
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-                return false;
-            }
-
-            // Check if file exists
-            string filePath = Path.Combine(path, "PolygonMask.dat");
-            if (!File.Exists(filePath))
-            {
-                Debug.unityLogger.Log(m_LogTag, " There is no polygon: " + filePath);
-                return false;
-            }
-
-            using (var stream = new StreamReader(filePath))
-            {
-                string line = stream.ReadLine();
-                Debug.unityLogger.Log(m_LogTag, " Line: " + line);
-
-                if (!string.IsNullOrEmpty(line))
-                {
-                    m_PolygonData = JsonUtility.FromJson<PolygonData>(line);
-
-                }
-                stream.Close();
-            }
-
-            if (m_PolygonData != null)
-            {
-                Debug.unityLogger.Log(m_LogTag, " Polygon loaded ");
-                CreatePolygon();
-            }
-
-            return true;
-        }
-
-        private void CreatePoints()
-        {
-            m_ListObjectPoints = new List<GameObject>();
-            if (m_PolygonData != null)
-            {
-                for (int i = 0; i < m_PolygonData.ListVertices.Count; i++)
-                {
-                    GameObject obj = Instantiate(m_PointObjectPrefab, m_PolygonData.ListVertices[i], Quaternion.identity);
-                    obj.name = "PolygonPoint_" + m_PolygonData.ListVertices.Count;
-                    m_ListObjectPoints.Add(obj);
-                }
-            }
-
-        }
-
-        public void ShowPoints()
-        {
-            if (m_ListObjectPoints != null)
-            {
-                for (int i = 0; i < m_ListObjectPoints.Count; i++)
-                {
-                    m_ListObjectPoints[i].SetActive(true);
-                }
-
-                m_ToolUI.ShowPointsButton.gameObject.SetActive(false);
-                m_ToolUI.HidePointsButton.gameObject.SetActive(true);
-            }
-        }
-
-        public void HidePoints()
-        {
-            if (m_ListObjectPoints != null)
-            {
-                for (int i = 0; i < m_ListObjectPoints.Count; i++)
-                {
-                    m_ListObjectPoints[i].SetActive(false);
-                }
-                m_ToolUI.ShowPointsButton.gameObject.SetActive(true);
-                m_ToolUI.HidePointsButton.gameObject.SetActive(false);
-            }
-        }
+        
 
         #endregion Buttons
-
 
     }
 }
