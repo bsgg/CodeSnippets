@@ -2,13 +2,13 @@
 using System.Collections;
 using System;
 
-namespace MiscCode
+namespace Effects
 {
     public class DebrisEffect : MonoBehaviour
     {
         [SerializeField] private float          m_ExplosionForce;
         [SerializeField] private float          m_ExplosionRadius;        
-        [SerializeField]  private Vector2       m_RangeMass;
+        [SerializeField] private Vector2       m_RangeMass;
 
         private Rigidbody[]                     m_ObjectRigidbodies;
 
@@ -22,13 +22,13 @@ namespace MiscCode
                 m_ObjectRigidbodies[i].mass = 0.0f;
                 m_ObjectRigidbodies[i].useGravity = true;
             }
-            Explode();           
+            //Explode();           
         }
        
         /// <summary>
         /// Show the effect to explode
         /// </summary>
-        public void Explode()
+        public void Play()
         {
             for (int i = 0; i < m_ObjectRigidbodies.Length; i++)
             {
