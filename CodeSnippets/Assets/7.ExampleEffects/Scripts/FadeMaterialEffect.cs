@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace MisCode
+namespace Effects
 {
     /// <summary>
     /// Fade In Fade Out Material effect. The object needs a material with Fade render option 

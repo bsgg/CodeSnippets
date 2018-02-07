@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace MisCode
+namespace Effects
 {
     public class Effect : MonoBehaviour
     {
@@ -10,6 +10,14 @@ namespace MisCode
         [SerializeField]  protected float m_DelayToStart;
         [SerializeField]  private bool m_EffectAtStart = false;
         protected bool m_UpdateEffect = false;
+
+        void Awake()
+        {
+            DoAwake();
+        }
+
+        protected virtual void DoAwake()
+        { }
 
         void Start()
         {

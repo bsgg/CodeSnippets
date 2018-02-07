@@ -2,71 +2,76 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MisCode
+namespace Effects
 {
     public class DissolveEffect : Effect
     {
+        public enum DIRECTION { LEFT_RIGHT, RIGHT_LEFT };
+        [SerializeField] private DIRECTION m_Direction = DIRECTION.LEFT_RIGHT;
+        [SerializeField] private float m_Speed = 1.0f;
 
-        [SerializeField] private MeshRenderer m_MeshRenderer;
-        private                  Material m_MeshMaterial;
+        private Material m_MeshMaterial;
+        private float m_DissolveAmount = 0.0f; 
+        
 
-        private float m_SliceAmount = 0.0f;
-        [SerializeField] private float m_SpeedSliceAmount = 1.0f;
+        protected override void DoAwake()
+        {
+            base.DoAwake();
 
-        [SerializeField]
-        private bool m_LeftToRight = true;
+            m_MeshMaterial = GetComponent<MeshRenderer>().materials[0];
+        }
 
         protected override void DoStart()
         {
-            base.DoStart();
+            if (m_MeshMaterial == null) return;
 
-            if (m_MeshRenderer != null)
+            base.DoStart();           
+
+            if (m_Direction == DIRECTION.LEFT_RIGHT)
             {
-                m_MeshMaterial = m_MeshRenderer.materials[0];
-
-                if (m_LeftToRight)
-                {
-                    m_SliceAmount = 0.0f;
-                }else
-                {
-                    m_SliceAmount = 1.0f;
-                }
+                m_DissolveAmount = 0.0f;
+            }else if (m_Direction == DIRECTION.RIGHT_LEFT)
+            {
+                m_DissolveAmount = 1.0f;
+            }
                 
 
-                m_MeshMaterial.SetFloat("_SliceAmount", m_SliceAmount);
-            }
+            m_MeshMaterial.SetFloat("_SliceAmount", m_DissolveAmount);
+            
         }
 
         protected override void DoUpdate()
         {
-            base.DoUpdate();
+            if (m_MeshMaterial == null) return;
 
-            if (m_MeshMaterial != null)
+            base.DoUpdate();
+            
+            if (m_Direction == DIRECTION.LEFT_RIGHT)
             {
-                if (m_LeftToRight)
+                if (m_DissolveAmount < 1.0f)
                 {
-                    if (m_SliceAmount < 1.0f)
-                    {
-                        m_SliceAmount += (m_SpeedSliceAmount * Time.deltaTime);
-                    }
-                    else
-                    {
-                        m_SliceAmount = 1.0f;
-                    }
-                }else
+                    m_DissolveAmount += (m_Speed * Time.deltaTime);
+                }
+                else
                 {
-                    if (m_SliceAmount > 0.0f)
-                    {
-                        m_SliceAmount -= (m_SpeedSliceAmount * Time.deltaTime);
-                    }
-                    else
-                    {
-                        m_SliceAmount = 0.0f;
-                    }
+                    m_DissolveAmount = 1.0f;
+                    m_Direction = DIRECTION.RIGHT_LEFT;
                 }
 
-                m_MeshMaterial.SetFloat("_SliceAmount", m_SliceAmount);
+            }else if (m_Direction == DIRECTION.RIGHT_LEFT)
+            {
+                if (m_DissolveAmount > 0.0f)
+                {
+                    m_DissolveAmount -= (m_Speed * Time.deltaTime);
+                }
+                else
+                {
+                    m_DissolveAmount = 0.0f;
+                    m_Direction = DIRECTION.LEFT_RIGHT;
+                }
             }
+
+            m_MeshMaterial.SetFloat("_SliceAmount", m_DissolveAmount);           
 
         }
     }

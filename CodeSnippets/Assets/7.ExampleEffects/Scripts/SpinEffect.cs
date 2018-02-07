@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace MisCode
+namespace Effects
 {
     public class SpinEffect : Effect
     {
