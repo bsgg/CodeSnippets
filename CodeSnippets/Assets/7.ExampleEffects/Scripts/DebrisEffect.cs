@@ -4,7 +4,7 @@ using System;
 
 namespace Effects
 {
-    public class DebrisEffect : MonoBehaviour
+    public class DebrisEffect : Effect
     {
         [SerializeField] private float          m_ExplosionForce;
         [SerializeField] private float          m_ExplosionRadius;        
@@ -12,7 +12,7 @@ namespace Effects
 
         private Rigidbody[]                     m_ObjectRigidbodies;
 
-        void Start()
+        protected override void DoStart()
         {
             // Get all rigidbodies under this object
             m_ObjectRigidbodies = GetComponentsInChildren<Rigidbody>();
@@ -22,7 +22,8 @@ namespace Effects
                 m_ObjectRigidbodies[i].mass = 0.0f;
                 m_ObjectRigidbodies[i].useGravity = true;
             }
-            //Explode();           
+
+            base.DoStart();
         }
        
         /// <summary>
