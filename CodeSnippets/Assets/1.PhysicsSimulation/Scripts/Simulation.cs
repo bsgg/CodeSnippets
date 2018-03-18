@@ -12,9 +12,13 @@ namespace CodeSnippets
         private float m_InitVelocity = 50;
 
         [SerializeField]
-        private Vector2 m_CurrentVelocity;
+        private Vector2 m_CurrentVelocity = Vector3.zero;
+        public Vector2 CurrentVelocity
+        {
+            get { return m_CurrentVelocity; }
+        }
 
-        private Vector3 m_InitPosition;
+        private Vector3 m_InitPosition = Vector3.zero;
         private float m_Time;
 
 

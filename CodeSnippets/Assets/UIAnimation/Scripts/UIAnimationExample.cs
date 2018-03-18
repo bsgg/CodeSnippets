@@ -8,9 +8,7 @@ namespace Utility
     {
         [Header("Obj")]
         [SerializeField] private RectTransform          m_RootTransform;
-        [SerializeField] private float                  m_AnimationLength = 0.1f;
 
-        // Use this for initialization
         void Start()
         {
             float startScale = 0.0f;

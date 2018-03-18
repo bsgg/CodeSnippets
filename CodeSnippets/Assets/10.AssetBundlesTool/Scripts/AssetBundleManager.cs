@@ -171,6 +171,7 @@ namespace AssetBundleTool
                 catch (Exception e)
                 {
                     Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: Malformed index JSON SERVER File" + "\n</color>";
+                    Debug.Log("Exception " + e.Message);
                     Debug.Log("<color=purple>" + "[AssetBundleManager] ERROR: Malformed index JSON SERVER File" + "</color>");
                 }
             }else
@@ -206,6 +207,7 @@ namespace AssetBundleTool
                     catch (Exception e)
                     {
                         Utility.UICodeSnippets.Instance.Log += "<color=red>" + "ERROR: Malformed index JSON LOCAL File" + "\n</color>";
+                        Debug.Log("Exception " + e.Message);
                         Debug.Log("<color=purple>" + "[AssetBundleManager] ERROR: Malformed index JSON LOCAL File" + "</color>");
                     }
 
@@ -576,6 +578,7 @@ namespace AssetBundleTool
                         }
                         catch (Exception e)
                         {
+                            Debug.Log("Exception " + e.Message);
                         }
                         yield return new WaitForSeconds(0.5f);
                         nFilesDeleted++;

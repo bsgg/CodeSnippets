@@ -7,9 +7,7 @@ namespace Interactions
     public class PanCameraInteraction : BaseInteraction
     {
         [SerializeField]
-        private float m_SpeedPan = 10.0f;
-
-        private Quaternion m_InitialQuaternion;      
+        private float m_SpeedPan = 10.0f; 
 
         private bool m_IsPannig = false;
         private Vector3 m_CurrentEuler = Vector3.zero;
@@ -21,10 +19,6 @@ namespace Interactions
         public float m_LeftClamp = -25.0f;
         public float m_RigthClamp = 7.0f;
 
-        protected override void DoStart()
-        {
-            m_InitialQuaternion = transform.localRotation;
-        }
 
         protected override void DoUpdate()
         {

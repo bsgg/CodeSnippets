@@ -17,7 +17,6 @@ namespace ColorDetection
         // Device cameras
         private WebCamDevice m_FrontCameraDevice;
         private WebCamDevice m_BackCameraDevice;
-        private WebCamDevice m_ActiveCameraDevice;
 
         private WebCamTexture m_FrontCameraTexture;
         private WebCamTexture m_BackCameraTexture;
@@ -36,10 +35,6 @@ namespace ColorDetection
         // Image uvRect
         private Rect m_DefaultRect = new Rect(0.0f, 0.0f, 1.0f, 1.0f);
         private Rect m_FixedRect = new Rect(0.0f, 1.0f, 1.0f, -1.0f);
-
-        // Image Parent's scale
-        private Vector3 m_DefaultScale = new Vector3(1.0f, 1.0f, 1.0f);
-        private Vector3 m_FixedScale = new Vector3(-1.0f, 1.0f, 1.0f);
 
 
         void Start()
@@ -77,9 +72,7 @@ namespace ColorDetection
                 m_ActiveCameraTexture.Stop();
             }
 
-            m_ActiveCameraTexture = cameraToUse;
-            m_ActiveCameraDevice = WebCamTexture.devices.FirstOrDefault(device =>
-                device.name == cameraToUse.deviceName);
+            m_ActiveCameraTexture = cameraToUse;            
 
             m_ActiveCameraTexture.Play();
         }

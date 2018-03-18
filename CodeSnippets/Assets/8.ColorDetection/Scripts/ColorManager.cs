@@ -97,9 +97,6 @@ namespace ColorDetection
         private bool                                    m_DetectByHSV = false;
 
         [SerializeField]
-        private string                                  m_NameBestColorCameraColor;
-
-        [SerializeField]
         private MeshRenderer                            m_MeshDetectColor;
         private Material                                m_MatRenderDetectColor;
 
@@ -210,7 +207,6 @@ namespace ColorDetection
                         {
                             bestDistance = distances[iDistance];
                             bestColor = listColors[i].DefaultColor;
-                            m_NameBestColorCameraColor = listColors[i].NameColor;
                         }
                     }
                 }
@@ -261,7 +257,6 @@ namespace ColorDetection
                         {                            
                             bestDistance = distances[iDistance];
                             bestColor = listColors[i].DefaultColor;
-                            m_NameBestColorCameraColor = listColors[i].NameColor;
                         }
                     }
                 }
