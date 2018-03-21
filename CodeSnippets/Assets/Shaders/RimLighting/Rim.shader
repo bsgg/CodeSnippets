@@ -12,6 +12,8 @@
 
 		struct Input {
 			float3 viewDir; // Get view direction from the world
+			float3 worldPos; // Get world position of the pixel that you are about to draw
+
 		};
 
 		// Hold properties
@@ -31,10 +33,17 @@
 			// For the rim effect what we want is moving between 1 to 0,  not between -1 and 1, since -1 is no color. To do this we use saturate
 			// Color saturation refers to the intensity of color in an image
 			half saturateDotValue = saturate(dotValue);
-			rim = 1 - saturateDotValue;
+			rim = 1 - saturateDotValue; // Rim value will be between 1 and 0
 
 			// Include pow we increase the intesity of the rim
-			o.Emission = _RimColor.rgb * pow(rim, _RimPower);
+			//o.Emission = _RimColor.rgb * pow(rim, _RimPower);
+
+			// Example with stripes
+			// frac function gives you anything inside the brackets and gives you the fractional part, or the decimal part
+			o.Emission = frac(IN.worldPos.y * 10 * 0.5) > 0.4 ? 
+							float3(0.2,0,0.8) * rim: float3(1,1,0) * rim;
+
+			
 			
 			
 		}
