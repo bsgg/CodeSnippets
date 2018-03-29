@@ -69,7 +69,9 @@ namespace Utility.DrawTool
 
             m_PreviewImage.preserveAspect = true;
 
-            
+
+           // https://gamedev.stackexchange.com/questions/79546/how-do-you-handle-aspect-ratio-differences-with-unity-2d
+
 
 
             /*if (m_AspectRatioFitter != null)
