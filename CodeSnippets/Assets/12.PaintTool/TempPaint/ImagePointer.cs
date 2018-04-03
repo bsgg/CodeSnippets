@@ -17,8 +17,9 @@ public class ImagePointer : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         Vector2 localCursor;
-        var rect1 = GetComponent<RectTransform>();
-        var pos1 = eventData.position;
+        RectTransform rect1 = GetComponent<RectTransform>();
+        Vector2 pos1 = eventData.position;
+
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect1, pos1,
             null, out localCursor))
             return;
@@ -32,14 +33,14 @@ public class ImagePointer : MonoBehaviour, IPointerClickHandler
         if (ypos > 0) ypos = ypos + (int)rect1.rect.height / 2;
         else ypos += (int)rect1.rect.height / 2;
 
-        Debug.Log("Correct Cursor Pos: " + xpos + " " + ypos);
+        Debug.Log("Mouse Cursor: (" + xpos + " , " + ypos + ")");
 
         int xCoord = (xpos * texture.width);
         int yCoord = (ypos * texture.height);
 
-        Debug.Log("Coords: " + xCoord + " " + yCoord);
+        //Debug.Log("Coords: " + xCoord + " " + yCoord);
 
-        texture.SetPixel(xCoord, yCoord, Color.red);
+        texture.SetPixel(xpos, ypos, Color.red);
         texture.Apply();
 
         //Vector2 position;

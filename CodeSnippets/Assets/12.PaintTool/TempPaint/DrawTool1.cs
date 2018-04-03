@@ -28,8 +28,73 @@ namespace Utility.DrawTool
         [SerializeField] private Image m_PreviewImage;
         [SerializeField] private Texture2D m_Picture;
 
+        [SerializeField] private Camera m_Camera;
+        [SerializeField] private GameObject m_PlaneCam;
+        private void SetCamera()
+        {
+
+            //m_Camera.orthographicSize = (20.0f / Screen.width * Screen.height / 2.0f);
+
+            
+
+
+
+           // m_PlaneCam.transform.localScale = Vector3.one * width / m_Camera.orthographicSize;
+
+            Plane[] planes =  GeometryUtility.CalculateFrustumPlanes(m_Camera);
+
+            if (planes.Length >= 6)
+            {
+                // Back plane
+                //GameObject farPlane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+               // farPlane.name = "FarPlane ";
+                //farPlane.transform.position = -planes[5].normal * planes[5].distance;
+                //farPlane.transform.rotation = Quaternion.FromToRotation(Vector3.up, planes[5].normal);
+
+
+                //float pos = (m_Camera.nearClipPlane + 0.01f);
+                //float h = Mathf.Tan(m_Camera.fieldOfView * Mathf.Deg2Rad * 0.5f) * pos * 2f;
+
+
+                //farPlane.transform.localScale = new Vector3(h * m_Camera.aspect, h, 1.0f);
+                //float height = Camera.main.orthographicSize * 2.0f;
+               // float width = height * Screen.width / Screen.height;
+                //farPlane.transform.localScale = new Vector3(width, height, 0.1f);
+
+                //float height = m_Camera.orthographicSize * 2.0f;
+                //float width = height * (Screen.width / Screen.height);
+                //farPlane.transform.localScale = new Vector3(width / 10, 1.0f, height / 10);
+
+               
+
+                /*float size = m_Camera.orthographicSize;
+                float aspect = m_Camera.aspect;
+                farPlane.transform.localScale = new Vector3(Mathf.max(size, 1.0f , size * aspect);*/
+
+
+
+                //m_Camera.orthographicSize
+                //Get a world space vector to the upper right corner of the screen
+                // Vector3 UpRight = m_Camera.ViewportToWorldPoint(new Vector3(1, 1, farPlane.transform.localPosition.z));
+
+                //Get a would space vector to the lower left corner of the screen
+
+                //Vector3 DownLeft = m_Camera.ViewportToWorldPoint(new Vector3(-1, -1, farPlane.transform.localPosition.z));
+
+                //Set our width scale to be right - left
+                //Set our height scale to be up - down
+                //farPlane.transform.localScale = new Vector3(UpRight.x - DownLeft.x, UpRight.y - DownLeft.y, 1.0f );
+
+
+            }
+            
+        }
+
         void Start()
         {
+            SetCamera();
+
+
             float ySize = Camera.main.orthographicSize * 2.0f;
             float xSize = ySize * Screen.width / Screen.height;
             //m_Plane.transform.localScale = new Vector3(xSize/10, xSize/10, 1);
