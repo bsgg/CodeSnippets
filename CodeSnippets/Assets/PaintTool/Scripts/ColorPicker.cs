@@ -16,7 +16,9 @@ namespace Utility.PaintTool
         public Texture2D tex;
 
         public Image image;
-        public Color pickedColor;
+        public Color pickedColor = new Color(0.5f,0.5f,0.5f,1.0f);
+
+        public float imgWidth2, imgHeight2;
 
         private void Start()
         {
@@ -32,8 +34,17 @@ namespace Utility.PaintTool
 
             localCorners = new Vector3[4];
             rectTransform.GetLocalCorners(localCorners);
+
+
+
             imgWidth = localCorners[3].x - localCorners[0].x;
             imgHeight = localCorners[1].y - localCorners[0].y;
+
+            imgWidth2 = tex.width;
+            imgHeight2 = tex.height;
+
+
+
         }
 
         public Vector2 localPoint;
@@ -44,18 +55,6 @@ namespace Utility.PaintTool
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, pos1, null, out localPoint)) return;
 
-            /*int xpos = (int)(localPoint.x);
-            int ypos = (int)(localPoint.y);
-
-            if (xpos < 0) xpos = xpos + (int)rectTransform.rect.width / 2;
-            else xpos += (int)rectTransform.rect.width / 2;
-
-            if (ypos > 0) ypos = ypos + (int)rectTransform.rect.height / 2;
-            else ypos += (int)rectTransform.rect.height / 2;*/
-
-
-            //positionNormalizedForTexCoords.x = xpos / imgWidth + 0.5f;
-            //positionNormalizedForTexCoords.y = ypos / imgHeight + 0.5f;
 
 
             positionNormalizedForTexCoords.x = localPoint.x / imgWidth + 0.5f;

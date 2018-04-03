@@ -35,6 +35,8 @@ namespace Utility.PaintTool
         [SerializeField] private GameObject m_SpritePicture;
         [SerializeField] private Texture2D m_Picture;
 
+        [SerializeField] private ColorPicker m_ColorPicker;
+
         private void Start()
         {
             m_Saving = true;
@@ -107,7 +109,12 @@ namespace Utility.PaintTool
                 GameObject brushObj;
 
                 brushObj = Instantiate(m_BrushPrefab); //Instance brush
-                brushObj.GetComponent<SpriteRenderer>().color = m_BrushColor; //Set the brush color
+
+
+
+                brushObj.GetComponent<SpriteRenderer>().color = new Color(m_ColorPicker.pickedColor.r, m_ColorPicker.pickedColor.g, m_ColorPicker.pickedColor.b, 1.0f); //Set the brush color
+
+
 
                 m_BrushColor.a = m_BrushSize * 2.0f;// Brushes have alpha to have a merging effect when painted over.
                 brushObj.transform.parent = m_BrushContainer.transform; //Add the brush to our container to be wiped later
