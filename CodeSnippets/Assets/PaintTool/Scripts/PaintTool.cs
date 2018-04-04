@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Utility.PaintTool
 {
@@ -21,7 +22,7 @@ namespace Utility.PaintTool
         private GameObject m_3DCanvasObject;
         private Collider m_3DCanvasCollider;
 
-        private float m_BrushSize = 1.0f; //The size of our brush
+        [SerializeField] private float m_BrushSize =0.2f; //The size of our brush
         private Color m_BrushColor = Color.red; //The selected color
 
         [SerializeField] private GameObject m_BrushPrefab;
@@ -75,8 +76,6 @@ namespace Utility.PaintTool
             RenderTexture.active = null;
             m_BaseMaterial.mainTexture = tex;
 
-            
-
 
             if (m_3DCanvasObject != null)
             {
@@ -87,6 +86,30 @@ namespace Utility.PaintTool
             m_Saving = false;
             m_SpritePicture.gameObject.SetActive(true);
 
+            //SetPicturePreviewData(m_CanvasTexture);
+
+        }
+
+        [SerializeField]
+        private RawImage m_PreviewArea;
+
+        public void SetPicturePreviewData(Texture data)
+        {
+            // Calculates texture ration to apply to  AspectRatioFitter
+            float ratio = (data.width / data.height);
+
+            AspectRatioFitter arf = m_PreviewArea.gameObject.GetComponent<AspectRatioFitter>();
+
+            if (arf == null)
+            {
+                arf = m_PreviewArea.gameObject.AddComponent<AspectRatioFitter>();
+            }
+            if (arf != null)
+            {
+                arf.aspectRatio = ratio;
+            }
+
+            m_PreviewArea.texture = data;
         }
 
         void Update()
