@@ -41,16 +41,18 @@ namespace Utility.PaintTool
         private GameObject m_Preview3DCanvas;
         private Collider m_3DCanvasCollider;  
 
-        private bool m_Saving = true;
+        private bool m_Block = true;
+
+        [SerializeField] private LayerMask m_IgnoreLayer;
 
         private void Start()
         {
-            m_Saving = true;
+            m_Block = true;
 
             m_3DCanvasCollider = m_Preview3DCanvas.GetComponent<Collider>();
             StartCoroutine(SetPicture(1));
 
-            m_Saving = false;
+            m_Block = false;
         }        
 
         void Update()
@@ -60,7 +62,7 @@ namespace Utility.PaintTool
                 DoAction();
             }
 
-            UpdateBrushCursor();
+            //UpdateBrushCursor();
         }
 
         private void ResetTexture()
@@ -109,10 +111,10 @@ namespace Utility.PaintTool
 
         private void DoAction()
         {
-            if (m_Saving) return;
+            if (m_Block) return;
             Vector3 uvWorldPosition = Vector3.zero;
 
-            if (TryGetUVOnHit(ref uvWorldPosition))
+            if (TryHit(ref uvWorldPosition))
             {
                 // Instantiate brush obj
                 GameObject brushObj;
@@ -133,7 +135,7 @@ namespace Utility.PaintTool
                 if (m_BrushCounter >= m_MaxBrushCount)
                 {                    
                     m_BrushCursor.SetActive(false);
-                    m_Saving = true;
+                    m_Block = true;
                     Invoke("SaveTexture", 0.1f);
                 }
             }           
@@ -143,7 +145,7 @@ namespace Utility.PaintTool
         private void UpdateBrushCursor()
         {
             Vector3 uvWorldPosition = Vector3.zero;
-            if (TryGetUVOnHit(ref uvWorldPosition) && !m_Saving)
+            if (TryHit(ref uvWorldPosition) && !m_Block)
             {
                 m_BrushCursor.SetActive(true);
                 m_BrushCursor.transform.position = uvWorldPosition + m_BrushContainer.transform.position;
@@ -154,7 +156,7 @@ namespace Utility.PaintTool
             }
         }
 
-        private bool TryGetUVOnHit(ref Vector3 uvWorldPoint)
+        private bool TryHit(ref Vector3 uvWorldPoint)
         {
             if (m_3DCanvasCollider == null) return false;
 
@@ -163,9 +165,13 @@ namespace Utility.PaintTool
             Vector3 cursorPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0.0f);
             Ray cursorRay = m_SceneCamera.ScreenPointToRay(cursorPos);
 
-            if (Physics.Raycast(cursorRay, out hit, 200.0f))
+            int layerMask = 1 << 10;
+
+            if (Physics.Raycast(cursorRay, out hit, 200.0f, layerMask))
+            //if (Physics.Raycast(cursorRay, out hit, 200.0f))
             {
-                if (hit.collider == m_3DCanvasCollider)
+                Debug.Log("HIT " + hit.collider.name);
+                if (hit.collider.tag == m_3DCanvasCollider.tag)
                 {
                     // Get textureCoord
                     Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);                    
@@ -204,7 +210,7 @@ namespace Utility.PaintTool
 
         public void OnErasePress()
         {
-            m_Saving = true;
+            m_Block = true;
             m_BrushCounter = 0;
 
             ResetTexture();
@@ -225,7 +231,7 @@ namespace Utility.PaintTool
 
         private IEnumerator SaveOnDisk()
         {
-            m_Saving = true;
+            m_Block = true;
             m_UI.Hide();
             yield return new WaitForEndOfFrame();
 
@@ -237,8 +243,6 @@ namespace Utility.PaintTool
             {
                 System.IO.Directory.CreateDirectory(fullPath);
             }
-
-           
 
             Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
             texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0, false);
@@ -261,7 +265,7 @@ namespace Utility.PaintTool
         //Show again the user cursor (To avoid saving it to the texture)
         private void ShowCursor()
         {
-            m_Saving = false;
+            m_Block = false;
         }
     }
 }
