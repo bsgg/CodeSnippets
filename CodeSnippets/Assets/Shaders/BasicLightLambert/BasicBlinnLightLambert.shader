@@ -27,7 +27,10 @@
 			
 			// Final color
 			half4 c;
-			c.rgb = (s.Albedo * _LightColor0.rgb * diff + _LightColor0.rgb * spec) * atten;
+			//c.rgb = (s.Albedo * _LightColor0.rgb * diff + _LightColor0.rgb * spec) * atten;
+
+			c.rgb = (s.Albedo * _LightColor0.rgb * diff + _LightColor0.rgb * spec) * atten * _SinTime; //_SinTime Sine of time (t/4,t/4,t/2,t), sine over time, this changes the color over time
+
 			c.a = s.Alpha;
 			return c;
 		}
