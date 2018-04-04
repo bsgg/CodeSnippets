@@ -7,6 +7,18 @@ namespace Utility.PaintTool
 {
     public class PaintTool : MonoBehaviour
     {
+        [SerializeField] private PaintToolUI m_UI;
+
+        [Header("Picture Holder")]
+        [SerializeField] private Sprite[] m_PictureList;
+        [SerializeField] private GameObject m_PictureHolder;
+
+        
+
+
+
+
+
         [SerializeField] private GameObject m_BrushCursor; //The cursor that overlaps the model
         [SerializeField] private GameObject m_BrushContainer; // Container for the brushes painted
 
@@ -33,19 +45,17 @@ namespace Utility.PaintTool
 
         private bool m_Saving = true;
 
-        [SerializeField] private GameObject m_SpritePicture;
+        //[SerializeField] private GameObject m_SpritePicture;
         [SerializeField] private Texture2D m_Picture;
 
         [SerializeField] private ColorPicker m_ColorPicker;
 
-        private void Start()
+
+        // TODO ADD DIFFERENT PICTURES
+
+        private void InitializeCanvas()
         {
-            m_Saving = true;
-            m_SpritePicture.gameObject.SetActive(false);
-
-           // m_CanvasTexture = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGB32);
-
-            RenderTexture.active = m_CanvasTexture;            
+            RenderTexture.active = m_CanvasTexture;
 
             Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
 
@@ -55,62 +65,74 @@ namespace Utility.PaintTool
                 {
                     Color c = m_Picture.GetPixel(x, y);
 
-                    //Debug.Log("Color " + c);
-
-                   // if (c.a > 0f)
-                    {
-                        //Debug.Log("Color " + c);
-                        //tex.SetPixel(x, y, c);
-                    }
-                    //else
-                    {
-                        
-                        tex.SetPixel(x, y, new Color(1.0f,1.0f,1.0f,1.0f));
-                    }
-                   
+                    tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
                 }
             }
-            tex.Apply();
 
+            tex.Apply();
 
             RenderTexture.active = null;
             m_BaseMaterial.mainTexture = tex;
+        }
 
+        public IEnumerator SetPicture(int index)
+        {
+            m_PictureHolder.SetActive(false);
+            if (index < m_PictureList.Length)
+            {
+                Sprite tempS = m_PictureHolder.GetComponent<Sprite>();
+                if (tempS != null)
+                {
+                    tempS = m_PictureList[index];
+
+                    yield return new WaitForEndOfFrame();
+                    // Initialize canvas
+
+                    RenderTexture.active = m_CanvasTexture;
+                    Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
+
+                    for (int x = 0; x < m_CanvasTexture.width; x++)
+                    {
+                        for (int y = 0; y < m_CanvasTexture.height; y++)
+                        {
+                            Color c = tempS.texture.GetPixel(x, y);
+
+                            tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
+                        }
+                    }
+
+                    tex.Apply();
+
+                    RenderTexture.active = null;
+                    m_BaseMaterial.mainTexture = tex;
+                }
+            }
+
+            m_PictureHolder.SetActive(true);
+            yield break;
+        }
+
+        private void Start()
+        {
+            m_Saving = true;
+
+            m_3DCanvasCollider = m_3DCanvasObject.GetComponent<Collider>();
+            StartCoroutine(SetPicture(0));
+
+
+            /*m_PictureHolder.SetActive(false);
+
+            InitializeCanvas();
 
             if (m_3DCanvasObject != null)
             {
-                m_3DCanvasCollider = m_3DCanvasObject.GetComponent<Collider>();
-            }
-
+                
+            }*/
 
             m_Saving = false;
-            m_SpritePicture.gameObject.SetActive(true);
+            //m_PictureHolder.SetActive(true);
 
-            //SetPicturePreviewData(m_CanvasTexture);
-
-        }
-
-        [SerializeField]
-        private RawImage m_PreviewArea;
-
-        public void SetPicturePreviewData(Texture data)
-        {
-            // Calculates texture ration to apply to  AspectRatioFitter
-            float ratio = (data.width / data.height);
-
-            AspectRatioFitter arf = m_PreviewArea.gameObject.GetComponent<AspectRatioFitter>();
-
-            if (arf == null)
-            {
-                arf = m_PreviewArea.gameObject.AddComponent<AspectRatioFitter>();
-            }
-            if (arf != null)
-            {
-                arf.aspectRatio = ratio;
-            }
-
-            m_PreviewArea.texture = data;
-        }
+        }        
 
         void Update()
         {
@@ -118,6 +140,7 @@ namespace Utility.PaintTool
             {
                 DoAction();
             }
+
             UpdateBrushCursor();
         }
 
@@ -135,8 +158,7 @@ namespace Utility.PaintTool
 
 
 
-                brushObj.GetComponent<SpriteRenderer>().color = new Color(m_ColorPicker.pickedColor.r, m_ColorPicker.pickedColor.g, m_ColorPicker.pickedColor.b, 1.0f); //Set the brush color
-
+                brushObj.GetComponent<SpriteRenderer>().color = new Color(m_BrushColor.r, m_BrushColor.g, m_BrushColor.b, 1.0f); //Set the brush color
 
 
                 m_BrushColor.a = m_BrushSize * 2.0f;// Brushes have alpha to have a merging effect when painted over.
@@ -185,11 +207,11 @@ namespace Utility.PaintTool
                 {
                     // Get textureCoord
                     Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);
+                    
 
                     uvWorldPoint.x = pixelUV.x - m_CanvasCamera.orthographicSize;//To center the UV on X
                     uvWorldPoint.y = pixelUV.y - m_CanvasCamera.orthographicSize;//To center the UV on Y
                     uvWorldPoint.z = 0.0f;
-
                     return true;
                 }
             }

@@ -8,44 +8,76 @@ namespace Utility.PaintTool
 {
     public class PaintToolUI : MonoBehaviour
     {
-       
+        [SerializeField] private GameObject m_BrushMenu;
+        private bool m_BrushMenuVisible = false;
 
-        void Update()
+        [SerializeField] private Image[] m_ColorImageList;
+
+        private Color m_BrushColor;
+        public Color BrushColor
         {
-           /* Vector2 localPoint = Vector2.zero;
-
-            screenPoint = Input.mousePosition;
-            
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screenPoint, cam, out localPoint);
-
-
-            rectTransform.GetLocalCorners(localCorners);
-            imgWidth = localCorners[3].x - localCorners[0].x;
-            imgHeight = localCorners[1].y - localCorners[0].y;
-
-            Vector2 positionNormalizedForTexCoords;
-            positionNormalizedForTexCoords.x = localPoint.x / imgWidth + 0.5f;
-            positionNormalizedForTexCoords.y = localPoint.y / imgHeight + 0.5f;
-
-            if (Input.GetMouseButton(0))
-            {
-                if (positionNormalizedForTexCoords.x >= 0 && positionNormalizedForTexCoords.x <= 1 &&
-                    positionNormalizedForTexCoords.y >= 0 && positionNormalizedForTexCoords.y <= 1)
-                {
-                    pickedColor = tex.GetPixelBilinear(positionNormalizedForTexCoords.x, positionNormalizedForTexCoords.y);
-                    //print(positionNormalizedForTexCoords + "   pickedColor " + pickedColor);
-                    //UpdatePickedColorGameObject(pickedColor);
-                }
-            }*/
-
+            get { return m_BrushColor; }
         }
 
-        /*void UpdatePickedColorGameObject(Color color)
+        [SerializeField] private float[] m_BrushSizeList;
+
+        private float m_BrushSize;
+        public float BrushSize
         {
-            Image img = pickedColorGameObject.GetComponent<Image>();
-            img.color = color;
-        }*/
+            get { return m_BrushSize; }
+        }
+
+        private void Start()
+        {           
+            m_BrushMenuVisible = false;
+            m_BrushMenu.gameObject.SetActive(m_BrushMenuVisible);
+
+            // First color
+            m_BrushColor = new Color(m_ColorImageList[0].color.r, m_ColorImageList[0].color.g, m_ColorImageList[0].color.b,1.0f);
+            m_BrushSize = 1.0f;
+        }
+
+        public void OnMenuPress()
+        {
+            Debug.Log("OnMenuPress");
+
+            if (m_BrushMenuVisible)
+            {
+                m_BrushMenuVisible = false;
+            }
+            else
+            {
+                m_BrushMenuVisible = true;
+            }
+
+            m_BrushMenu.gameObject.SetActive(m_BrushMenuVisible);
+        }
+
+        public void OnColorPress(int id)
+        {
+            if (id < m_ColorImageList.Length)
+            {
+                m_BrushColor = new Color(m_ColorImageList[id].color.r, m_ColorImageList[id].color.g, m_ColorImageList[id].color.b, 1.0f);
+            }
+        }
+
+        public void OnBrushSizePress(int id)
+        {
+            if (id < m_BrushSizeList.Length)
+            {
+                m_BrushSize = m_BrushSizeList[id];
+            }
+        }
+
+        public void OnErasePress()
+        {
+            
+        }
+
+        public void OnSavePress()
+        {
+
+        }
 
     }
 }
