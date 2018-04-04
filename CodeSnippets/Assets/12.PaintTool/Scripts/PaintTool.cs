@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Utility.PaintTool
@@ -164,12 +165,22 @@ namespace Utility.PaintTool
             RaycastHit hit;
             Vector3 cursorPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0.0f);
             Ray cursorRay = m_SceneCamera.ScreenPointToRay(cursorPos);
+         
 
-            int layerMask = 1 << 10;
-
-            if (Physics.Raycast(cursorRay, out hit, 200.0f, layerMask))
-            //if (Physics.Raycast(cursorRay, out hit, 200.0f))
+            //int layerMask = 1 << 10;
+            //if (Physics.Raycast(cursorRay, out hit, 200.0f, layerMask))
+            if (Physics.Raycast(cursorRay, out hit, 200.0f))
             {
+                // Ignore UI
+                int fingerID = -1;
+#if !UNITY_EDITOR
+     fingerID = 0; 
+#endif
+                if (EventSystem.current.IsPointerOverGameObject(fingerID))    // is the touch on the GUI
+                {
+                    return false;
+                }
+
                 Debug.Log("HIT " + hit.collider.name);
                 if (hit.collider.tag == m_3DCanvasCollider.tag)
                 {
