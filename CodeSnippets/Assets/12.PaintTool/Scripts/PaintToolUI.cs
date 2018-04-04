@@ -8,6 +8,7 @@ namespace Utility.PaintTool
 {
     public class PaintToolUI : MonoBehaviour
     {
+        [SerializeField] private GameObject m_TopBar;
         [SerializeField] private GameObject m_BrushMenu;
         private bool m_BrushMenuVisible = false;
 
@@ -25,6 +26,18 @@ namespace Utility.PaintTool
         public float BrushSize
         {
             get { return m_BrushSize; }
+        }
+
+        public void Hide()
+        {
+            m_BrushMenu.SetActive(false);
+            m_TopBar.SetActive(false);
+        }
+
+        public void Show()
+        {
+            m_BrushMenu.SetActive(true);
+            m_TopBar.SetActive(true);
         }
 
         private void Start()
@@ -68,16 +81,7 @@ namespace Utility.PaintTool
                 m_BrushSize = m_BrushSizeList[id];
             }
         }
-
-        public void OnErasePress()
-        {
-            
-        }
-
-        public void OnSavePress()
-        {
-
-        }
+        
 
     }
 }

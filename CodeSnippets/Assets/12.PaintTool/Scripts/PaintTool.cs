@@ -12,7 +12,8 @@ namespace Utility.PaintTool
 
         [Header("Picture Holder")]
         [SerializeField] private GameObject m_PictureHolder;
-        [SerializeField] private SpriteRenderer[] m_SpriteRendererList;        
+        [SerializeField] private SpriteRenderer[] m_SpriteRendererList;
+        private int m_IndexPicture = 0;
 
         [Header("Brush")]
         // The cursor that overlaps the model
@@ -42,8 +43,6 @@ namespace Utility.PaintTool
 
         private bool m_Saving = true;
 
-        
-
         private void Start()
         {
             m_Saving = true;
@@ -64,31 +63,37 @@ namespace Utility.PaintTool
             UpdateBrushCursor();
         }
 
+        private void ResetTexture()
+        {
+            RenderTexture.active = m_CanvasTexture;
+            Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
+            for (int x = 0; x < m_CanvasTexture.width; x++)
+            {
+                for (int y = 0; y < m_CanvasTexture.height; y++)
+                {
+                    Color c = m_SpriteRendererList[m_IndexPicture].sprite.texture.GetPixel(x, y);
+
+                    tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
+                }
+            }
+
+            tex.Apply();
+
+            RenderTexture.active = null;
+            m_BaseMaterial.mainTexture = tex;
+        }
+
         public IEnumerator SetPicture(int index)
         {
-
+            m_IndexPicture = index;
             for (int i=0; i < m_SpriteRendererList.Length; i++)
             {
                 if (i == index)
                 {
                     m_SpriteRendererList[i].gameObject.SetActive(true);
 
-                    RenderTexture.active = m_CanvasTexture;
-                    Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
-                    for (int x = 0; x < m_CanvasTexture.width; x++)
-                    {
-                        for (int y = 0; y < m_CanvasTexture.height; y++)
-                        {
-                            Color c = m_SpriteRendererList[index].sprite.texture.GetPixel(x, y);
+                    ResetTexture();
 
-                            tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
-                        }
-                    }
-
-                    tex.Apply();
-
-                    RenderTexture.active = null;
-                    m_BaseMaterial.mainTexture = tex;
                     yield return new WaitForEndOfFrame();
 
                 }
@@ -195,6 +200,62 @@ namespace Utility.PaintTool
             }
 
             Invoke("ShowCursor", 0.1f);           
+        }
+
+        public void OnErasePress()
+        {
+            m_Saving = true;
+            m_BrushCounter = 0;
+
+            ResetTexture();
+
+            // Clear all brushes
+            foreach (Transform child in m_BrushContainer.transform)
+            {
+                Destroy(child.gameObject);
+            }
+
+            Invoke("ShowCursor", 0.1f);
+        }
+
+        public void OnSavePress()
+        {
+            StartCoroutine(SaveOnDisk());
+        }
+
+        private IEnumerator SaveOnDisk()
+        {
+            m_Saving = true;
+            m_UI.Hide();
+            yield return new WaitForEndOfFrame();
+
+            RenderTexture.active = null;
+            string fullPath = Application.persistentDataPath + "\\PaintTool\\";
+            System.DateTime date = System.DateTime.Now;            
+
+            if (!System.IO.Directory.Exists(fullPath))
+            {
+                System.IO.Directory.CreateDirectory(fullPath);
+            }
+
+           
+
+            Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+            texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0, false);
+            texture.Apply();
+
+            byte[] bytes = texture.EncodeToPNG();
+
+
+            string fileName = "PaintTool_" + date.Day+date.Month+date.Year + "_"+ date.Hour + date.Minute + date.Second + ".png";
+            System.IO.File.WriteAllBytes(fullPath + fileName, bytes);
+
+            Debug.Log("<color=orange>Saved Successfully!</color>" + fullPath + fileName);
+
+            yield return new WaitForSeconds(3.0f);
+
+            m_UI.Show();
+            Invoke("ShowCursor", 0.1f);
         }
 
         //Show again the user cursor (To avoid saving it to the texture)
