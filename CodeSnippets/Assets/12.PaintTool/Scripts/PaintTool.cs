@@ -7,131 +7,51 @@ namespace Utility.PaintTool
 {
     public class PaintTool : MonoBehaviour
     {
+        [Header("UI")]
         [SerializeField] private PaintToolUI m_UI;
 
         [Header("Picture Holder")]
-        [SerializeField] private Sprite[] m_PictureList;
         [SerializeField] private GameObject m_PictureHolder;
+        [SerializeField] private SpriteRenderer[] m_SpriteRendererList;        
 
-        
+        [Header("Brush")]
+        // The cursor that overlaps the model
+        [SerializeField] private GameObject m_BrushCursor;
+        // Container for the brushes painted
+        [SerializeField] private GameObject m_BrushContainer;
+        [SerializeField] private GameObject m_BrushPrefab;
+        // Limit number of brushes
+        private int m_BrushCounter = 0;
+        [SerializeField] private int m_MaxBrushCount = 1000;
 
+        [Header("Cameras")]
+        // Scene camera for the 3D Model
+        [SerializeField] private Camera m_SceneCamera;
+        // Canvas camera for for painting
+        [SerializeField] private Camera m_CanvasCamera;
 
-
-
-
-        [SerializeField] private GameObject m_BrushCursor; //The cursor that overlaps the model
-        [SerializeField] private GameObject m_BrushContainer; // Container for the brushes painted
-
-        [SerializeField] private Camera m_SceneCamera; // Scene camera for the 3D Model
-        [SerializeField] private Camera m_CanvasCamera; // Canvas camera for for painting
-
-        [SerializeField] private Sprite m_CursorPaint; // Sprite for Cursor
-        [SerializeField] private RenderTexture m_CanvasTexture; // Render Texture that looks at our Base Texture and the painted brushes
-        [SerializeField] private Material m_BaseMaterial; // The material of our base texture (Were we will save the painted texture)
-
+        [Header("Render Texture")]
+        // Render Texture that looks at our Base Texture and the painted brushes
+        [SerializeField] private RenderTexture m_CanvasTexture;
+        // The material of our base texture (Were we will save the painted texture)
+        [SerializeField] private Material m_BaseMaterial; 
 
         [SerializeField]
-        private GameObject m_3DCanvasObject;
-        private Collider m_3DCanvasCollider;
-
-        [SerializeField] private float m_BrushSize =0.2f; //The size of our brush
-        private Color m_BrushColor = Color.red; //The selected color
-
-        [SerializeField] private GameObject m_BrushPrefab;
-
-        // Limit number of brushes
-        [SerializeField] private int m_brushCounter = 0;
-        [SerializeField] private int MAX_BRUSH_COUNT = 1000;
+        private GameObject m_Preview3DCanvas;
+        private Collider m_3DCanvasCollider;  
 
         private bool m_Saving = true;
 
-        //[SerializeField] private GameObject m_SpritePicture;
-        [SerializeField] private Texture2D m_Picture;
-
-        [SerializeField] private ColorPicker m_ColorPicker;
-
-
-        // TODO ADD DIFFERENT PICTURES
-
-        private void InitializeCanvas()
-        {
-            RenderTexture.active = m_CanvasTexture;
-
-            Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
-
-            for (int x = 0; x < m_CanvasTexture.width; x++)
-            {
-                for (int y = 0; y < m_CanvasTexture.height; y++)
-                {
-                    Color c = m_Picture.GetPixel(x, y);
-
-                    tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
-                }
-            }
-
-            tex.Apply();
-
-            RenderTexture.active = null;
-            m_BaseMaterial.mainTexture = tex;
-        }
-
-        public IEnumerator SetPicture(int index)
-        {
-            m_PictureHolder.SetActive(false);
-            if (index < m_PictureList.Length)
-            {
-                Sprite tempS = m_PictureHolder.GetComponent<Sprite>();
-                if (tempS != null)
-                {
-                    tempS = m_PictureList[index];
-
-                    yield return new WaitForEndOfFrame();
-                    // Initialize canvas
-
-                    RenderTexture.active = m_CanvasTexture;
-                    Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
-
-                    for (int x = 0; x < m_CanvasTexture.width; x++)
-                    {
-                        for (int y = 0; y < m_CanvasTexture.height; y++)
-                        {
-                            Color c = tempS.texture.GetPixel(x, y);
-
-                            tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
-                        }
-                    }
-
-                    tex.Apply();
-
-                    RenderTexture.active = null;
-                    m_BaseMaterial.mainTexture = tex;
-                }
-            }
-
-            m_PictureHolder.SetActive(true);
-            yield break;
-        }
+        
 
         private void Start()
         {
             m_Saving = true;
 
-            m_3DCanvasCollider = m_3DCanvasObject.GetComponent<Collider>();
-            StartCoroutine(SetPicture(0));
-
-
-            /*m_PictureHolder.SetActive(false);
-
-            InitializeCanvas();
-
-            if (m_3DCanvasObject != null)
-            {
-                
-            }*/
+            m_3DCanvasCollider = m_Preview3DCanvas.GetComponent<Collider>();
+            StartCoroutine(SetPicture(1));
 
             m_Saving = false;
-            //m_PictureHolder.SetActive(true);
-
         }        
 
         void Update()
@@ -144,6 +64,44 @@ namespace Utility.PaintTool
             UpdateBrushCursor();
         }
 
+        public IEnumerator SetPicture(int index)
+        {
+
+            for (int i=0; i < m_SpriteRendererList.Length; i++)
+            {
+                if (i == index)
+                {
+                    m_SpriteRendererList[i].gameObject.SetActive(true);
+
+                    RenderTexture.active = m_CanvasTexture;
+                    Texture2D tex = new Texture2D(m_CanvasTexture.width, m_CanvasTexture.height, TextureFormat.RGB24, false);
+                    for (int x = 0; x < m_CanvasTexture.width; x++)
+                    {
+                        for (int y = 0; y < m_CanvasTexture.height; y++)
+                        {
+                            Color c = m_SpriteRendererList[index].sprite.texture.GetPixel(x, y);
+
+                            tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
+                        }
+                    }
+
+                    tex.Apply();
+
+                    RenderTexture.active = null;
+                    m_BaseMaterial.mainTexture = tex;
+                    yield return new WaitForEndOfFrame();
+
+                }
+                else
+                {
+                    m_SpriteRendererList[i].gameObject.SetActive(false);
+                }
+                
+            }
+
+            yield break;
+        }
+
         private void DoAction()
         {
             if (m_Saving) return;
@@ -154,21 +112,20 @@ namespace Utility.PaintTool
                 // Instantiate brush obj
                 GameObject brushObj;
 
-                brushObj = Instantiate(m_BrushPrefab); //Instance brush
+                //Instance brush
+                brushObj = Instantiate(m_BrushPrefab);
+
+                //Set the brush color
+                brushObj.GetComponent<SpriteRenderer>().color = m_UI.BrushColor;
 
 
-
-                brushObj.GetComponent<SpriteRenderer>().color = new Color(m_BrushColor.r, m_BrushColor.g, m_BrushColor.b, 1.0f); //Set the brush color
-
-
-                m_BrushColor.a = m_BrushSize * 2.0f;// Brushes have alpha to have a merging effect when painted over.
                 brushObj.transform.parent = m_BrushContainer.transform; //Add the brush to our container to be wiped later
                 brushObj.transform.localPosition = uvWorldPosition; //The position of the brush (in the UVMap)
-                brushObj.transform.localScale = Vector3.one * m_BrushSize;//The size of the brush
+                brushObj.transform.localScale = Vector3.one * m_UI.BrushSize;//The size of the brush
 
-                m_brushCounter++;
+                m_BrushCounter++;
                 //If we reach the max brushes available, flatten the texture and clear the brushes
-                if (m_brushCounter >= MAX_BRUSH_COUNT)
+                if (m_BrushCounter >= m_MaxBrushCount)
                 {                    
                     m_BrushCursor.SetActive(false);
                     m_Saving = true;
@@ -206,8 +163,7 @@ namespace Utility.PaintTool
                 if (hit.collider == m_3DCanvasCollider)
                 {
                     // Get textureCoord
-                    Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);
-                    
+                    Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);                    
 
                     uvWorldPoint.x = pixelUV.x - m_CanvasCamera.orthographicSize;//To center the UV on X
                     uvWorldPoint.y = pixelUV.y - m_CanvasCamera.orthographicSize;//To center the UV on Y
@@ -219,11 +175,9 @@ namespace Utility.PaintTool
             return false;
         }
 
-       
-
         private void SaveTexture()
         {
-            m_brushCounter = 0;
+            m_BrushCounter = 0;
 
             RenderTexture.active = m_CanvasTexture;
 
@@ -240,16 +194,13 @@ namespace Utility.PaintTool
                 Destroy(child.gameObject);
             }
 
-            Invoke("ShowCursor", 0.1f);
-           
+            Invoke("ShowCursor", 0.1f);           
         }
 
         //Show again the user cursor (To avoid saving it to the texture)
-        void ShowCursor()
+        private void ShowCursor()
         {
             m_Saving = false;
         }
-
-
     }
 }

@@ -13,7 +13,7 @@ namespace Utility.PaintTool
 
         [SerializeField] private Image[] m_ColorImageList;
 
-        private Color m_BrushColor;
+        [SerializeField] private Color m_BrushColor;
         public Color BrushColor
         {
             get { return m_BrushColor; }
@@ -34,7 +34,7 @@ namespace Utility.PaintTool
 
             // First color
             m_BrushColor = new Color(m_ColorImageList[0].color.r, m_ColorImageList[0].color.g, m_ColorImageList[0].color.b,1.0f);
-            m_BrushSize = 1.0f;
+            m_BrushSize = m_BrushSizeList[0];
         }
 
         public void OnMenuPress()
