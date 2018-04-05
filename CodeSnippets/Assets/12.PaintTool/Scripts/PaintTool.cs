@@ -6,6 +6,16 @@ using UnityEngine.UI;
 
 namespace Utility.PaintTool
 {
+    [System.Serializable]
+    public class SpriteMask
+    {
+        public string ID;
+
+        public Sprite Mask;
+        public Sprite Outline;
+    }
+
+
     public class PaintTool : MonoBehaviour
     {
         [Header("UI")]
@@ -15,6 +25,12 @@ namespace Utility.PaintTool
         [SerializeField] private GameObject m_PictureHolder;
         [SerializeField] private SpriteRenderer[] m_SpriteRendererList;
         private int m_IndexPicture = 0;
+
+        //[SerializeField] private bool m_EnableMask = false;
+        [SerializeField] private SpriteMask[] m_SpriteList;
+        [SerializeField] private Material m_OutlineSpriteMaterial; // Material with the outline sprite 
+        [SerializeField] private Material m_FlatColorBackgroundMaterial; // Material with a simple color background
+        [SerializeField] private Material m_RenderTextureMaskedMaterial; // Material with the render texture and the mask for the final preview
 
         [Header("Brush")]
         // The cursor that overlaps the model
@@ -44,14 +60,12 @@ namespace Utility.PaintTool
 
         private bool m_Block = true;
 
-        [SerializeField] private LayerMask m_IgnoreLayer;
-
         private void Start()
         {
             m_Block = true;
 
             m_3DCanvasCollider = m_Preview3DCanvas.GetComponent<Collider>();
-            StartCoroutine(SetPicture(1));
+            StartCoroutine(SetPicture(0));
 
             m_Block = false;
         }        
@@ -74,7 +88,7 @@ namespace Utility.PaintTool
             {
                 for (int y = 0; y < m_CanvasTexture.height; y++)
                 {
-                    Color c = m_SpriteRendererList[m_IndexPicture].sprite.texture.GetPixel(x, y);
+                    //Color c = m_SpriteRendererList[m_IndexPicture].sprite.texture.GetPixel(x, y);
 
                     tex.SetPixel(x, y, new Color(1.0f, 1.0f, 1.0f, 1.0f));
                 }
@@ -88,8 +102,34 @@ namespace Utility.PaintTool
 
         public IEnumerator SetPicture(int index)
         {
+            if (index >= m_SpriteList.Length) 
+            {
+                Debug.LogError("PaintTool: SetPicture index out of range");
+                yield break;
+            }
+
             m_IndexPicture = index;
-            for (int i=0; i < m_SpriteRendererList.Length; i++)
+
+            //Set materials
+            // Set Outline material _MainTex
+            m_OutlineSpriteMaterial.SetTexture("_MainTex", m_SpriteList[index].Outline.texture);
+
+            // Set mask
+            m_RenderTextureMaskedMaterial.SetTexture("_Mask", m_SpriteList[index].Mask.texture);          
+            
+
+            // Background color
+            float randR = Random.Range(0.0f, 1.0f);
+            float randG = Random.Range(0.0f, 1.0f);
+            float randB = Random.Range(0.0f, 1.0f);
+            m_FlatColorBackgroundMaterial.SetColor("_Color", new Color(randR, randG, randB, 1.0f));
+
+            yield return new WaitForEndOfFrame();
+
+            ResetTexture();
+            yield return new WaitForEndOfFrame();
+
+            /*for (int i=0; i < m_SpriteRendererList.Length; i++)
             {
                 if (i == index)
                 {
@@ -107,7 +147,7 @@ namespace Utility.PaintTool
                 
             }
 
-            yield break;
+            yield break;*/
         }
 
         private void DoAction()
@@ -125,7 +165,6 @@ namespace Utility.PaintTool
 
                 //Set the brush color
                 brushObj.GetComponent<SpriteRenderer>().color = m_UI.BrushColor;
-
 
                 brushObj.transform.parent = m_BrushContainer.transform; //Add the brush to our container to be wiped later
                 brushObj.transform.localPosition = uvWorldPosition; //The position of the brush (in the UVMap)
@@ -165,7 +204,7 @@ namespace Utility.PaintTool
             RaycastHit hit;
             Vector3 cursorPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0.0f);
             Ray cursorRay = m_SceneCamera.ScreenPointToRay(cursorPos);
-         
+
 
             //int layerMask = 1 << 10;
             //if (Physics.Raycast(cursorRay, out hit, 200.0f, layerMask))
@@ -181,14 +220,15 @@ namespace Utility.PaintTool
                     return false;
                 }
 
-                Debug.Log("HIT " + hit.collider.name);
+                
                 if (hit.collider.tag == m_3DCanvasCollider.tag)
                 {
                     // Get textureCoord
-                    Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);                    
-
+                    Vector2 pixelUV = new Vector2(hit.textureCoord.x, hit.textureCoord.y);
+                   
                     uvWorldPoint.x = pixelUV.x - m_CanvasCamera.orthographicSize;//To center the UV on X
                     uvWorldPoint.y = pixelUV.y - m_CanvasCamera.orthographicSize;//To center the UV on Y
+                    
                     uvWorldPoint.z = 0.0f;
                     return true;
                 }
@@ -277,6 +317,11 @@ namespace Utility.PaintTool
         private void ShowCursor()
         {
             m_Block = false;
+        }
+
+        public void OnPictureBtnPress(int id)
+        {
+            StartCoroutine(SetPicture(id));
         }
     }
 }
