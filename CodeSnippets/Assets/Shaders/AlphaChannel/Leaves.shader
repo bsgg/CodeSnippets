@@ -4,7 +4,7 @@
 	}
 	SubShader {
 		Tags { "RenderType"="Transparent" }
-
+ 
 		CGPROGRAM
 		// Physically based Standard lighting Lambert, include alpha:fade the alpha is enabled. Alpha doesn't write into zbuffer, so sometimes you can have z-fighting
 		#pragma surface surf Lambert alpha:fade
