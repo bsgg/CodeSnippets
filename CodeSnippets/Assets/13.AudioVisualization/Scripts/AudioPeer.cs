@@ -54,8 +54,24 @@ public class AudioPeer : MonoBehaviour
         int count = 0;
         for (int i=0; i<8; i++)
         {
-            int sampleCount = (int)Mathf.Pow(2, i) * 2;
-            
+            float average = 0;
+            int sampleCount = (int)Mathf.Pow(2, i) * 2; // We get 2,4,8,16,32,64,128,210 number
+            // We need 512 with this operation we get 510 only we add 2 for the last one
+            if (i == 7)
+            {
+                sampleCount += 2;
+            }
+            for (int j=0; j< sampleCount; j++)
+            {
+                average += m_Samples[count] *  (count +1);
+                count++;
+            }
+
+            average /= count;
+
+            // The average will be a bit smaller, multiplying this by 10 will be a bit bigger
+            m_FrequenceBands[i] = average * 10;
+
         }
 
     }
