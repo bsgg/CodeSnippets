@@ -11,6 +11,10 @@ public class AudioPeer : MonoBehaviour
 
     public static float[] m_FrequenceBands = new float[8];
 
+    public static float[] m_BandBuffer = new float[8];
+
+    private float[] m_BufferDecrease = new float[8];
+
 	void Start ()
     {
         m_AudioSource = GetComponent<AudioSource>();
@@ -20,6 +24,26 @@ public class AudioPeer : MonoBehaviour
     {
         GetSpectrumAudioSource();
         MakeFrequenceBands();
+        BandBuffer();
+    }
+
+    void BandBuffer()
+    {
+        for (int g = 0; g< 8; ++g)
+        {
+            if (m_FrequenceBands[g] > m_BandBuffer[g])
+            {
+                m_BandBuffer[g] = m_FrequenceBands[g];
+                m_BufferDecrease[g] = 0.005f;
+
+            }
+
+            if (m_FrequenceBands[g] < m_BandBuffer[g])
+            {
+                m_BandBuffer[g] -= m_BufferDecrease[g];
+                m_BufferDecrease[g] *= 1.2f;
+            }
+        }
     }
 
     void GetSpectrumAudioSource()
