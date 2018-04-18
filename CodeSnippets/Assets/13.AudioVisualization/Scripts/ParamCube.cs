@@ -2,27 +2,65 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ParamCube : MonoBehaviour {
+namespace AudioVisualizer
+{
+    public class ParamCube : MonoBehaviour
+    {
 
-    [SerializeField] private int m_Band;
-    [SerializeField] private float m_StartScale;
-    [SerializeField] private float m_ScaleMultiplier;
-    [SerializeField] private bool m_UseBuffer;
+        [SerializeField] private int m_Band;
+        [SerializeField] private float m_StartScale;
+        [SerializeField] private float m_ScaleMultiplier;
+        [SerializeField] private bool m_UseBuffer;
+        [SerializeField] private Material m_Material;
 
-	void Update ()
-    {if (m_UseBuffer)
+        private void Awake()
         {
-            transform.localScale = new Vector3(
-                transform.localScale.x,
-                (AudioPeer.m_BandBuffer[m_Band] * m_ScaleMultiplier) + m_StartScale,
-                transform.localScale.z);
+            m_Material = GetComponent<MeshRenderer>().materials[0];
         }
-        else
+
+        private void Start()
         {
             transform.localScale = new Vector3(
-               transform.localScale.x,
-               (AudioPeer.m_FrequenceBands[m_Band] * m_ScaleMultiplier) + m_StartScale,
-               transform.localScale.z);
-        }		
-	}
+                    transform.localScale.x,
+                    m_StartScale,
+                    transform.localScale.z);
+        }
+
+        void Update()
+        {
+            if (m_UseBuffer)
+            {
+                float scaleY = m_StartScale;
+                float auxScale = (AudioPeer.AudioBandBuffer[m_Band] * m_ScaleMultiplier) + m_StartScale;
+                if (!float.IsNaN(auxScale)) scaleY = auxScale;
+
+                transform.localScale = new Vector3(
+                    transform.localScale.x,
+                    scaleY,
+                    transform.localScale.z);
+                Color c = new Color(
+                    AudioPeer.AudioBandBuffer[m_Band],
+                    AudioPeer.AudioBandBuffer[m_Band],
+                    AudioPeer.AudioBandBuffer[m_Band]);
+                m_Material.SetColor("_EmissionColor", c);
+            }
+            else
+            {
+                float scaleY = m_StartScale;
+                float auxScale = (AudioPeer.AudioBand[m_Band] * m_ScaleMultiplier) + m_StartScale;
+                if (!float.IsNaN(auxScale)) scaleY = auxScale;
+
+                transform.localScale = new Vector3(
+                   transform.localScale.x,
+                   scaleY,
+                   transform.localScale.z);
+
+                Color c = new Color(
+                    AudioPeer.AudioBand[m_Band],
+                    AudioPeer.AudioBand[m_Band],
+                    AudioPeer.AudioBand[m_Band]);
+                m_Material.SetColor("_EmissionColor", c);
+            }
+        }
+    }
 }
