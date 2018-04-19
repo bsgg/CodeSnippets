@@ -12,7 +12,11 @@ namespace AudioVisualizer
         const int NSAMPLES = 512;
         const int NBANDS = 8;
 
-        private float[] m_Samples = new float[NSAMPLES];
+        //private float[] m_Samples = new float[NSAMPLES];
+
+        private float[] m_SamplesLeft = new float[NSAMPLES];
+        private float[] m_SamplesRight = new float[NSAMPLES];
+
         private float[] m_FreqBand = new float[NBANDS];
         private float[] m_BandBuffer = new float[NBANDS];
         private float[] m_BufferDecrease = new float[NBANDS];
@@ -25,6 +29,9 @@ namespace AudioVisualizer
         public static float AmplitudeBuffer;
         private float m_AmplitudeHighest;
         [SerializeField] private float m_AudioProfile;
+
+        public enum EChannel {Stereo, Left, Right };
+        [SerializeField] private EChannel m_Channel;
 
         void Start()
         {
@@ -104,7 +111,9 @@ namespace AudioVisualizer
         void GetSpectrumAudioSource()
         {
             // Get all the samples from the audio source
-            m_AudioSource.GetSpectrumData(m_Samples, 0, FFTWindow.Blackman);
+            m_AudioSource.GetSpectrumData(m_SamplesLeft, 0, FFTWindow.Blackman);
+            m_AudioSource.GetSpectrumData(m_SamplesRight, 1, FFTWindow.Blackman);
+            
         }
 
         void MakeFrequenceBands()
@@ -142,7 +151,19 @@ namespace AudioVisualizer
                 }
                 for (int j = 0; j < sampleCount; j++)
                 {
-                    average += m_Samples[count] * (count + 1);
+                    if (m_Channel == EChannel.Stereo)
+                    {
+                        average += m_SamplesLeft[count] + m_SamplesRight[count] * (count + 1);
+                    }
+                    if (m_Channel == EChannel.Left)
+                    {
+                        average += m_SamplesLeft[count] * (count + 1);
+                    }
+                    if (m_Channel == EChannel.Right)
+                    {
+                        average += m_SamplesRight[count] * (count + 1);
+                    }
+
                     count++;
                 }
 
