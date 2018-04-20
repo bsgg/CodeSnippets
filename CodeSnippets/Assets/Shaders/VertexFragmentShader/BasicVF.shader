@@ -25,7 +25,7 @@
 				float2 uv : TEXCOORD0;
 			};
 
-			struct v2f
+			struct v2f // Vertex to fragmen structure
 			{
 				float2 uv : TEXCOORD0;
 				UNITY_FOG_COORDS(1)
