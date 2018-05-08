@@ -35,7 +35,8 @@ namespace AssetBundleTool
         [SerializeField] private AssetBundleUI m_UI;
 
         [Header("Settings")]
-        [SerializeField] private string m_AssetBundlesUrl = "beatrizcv.com//Data/AssetBundles/";
+        //[SerializeField] private string m_AssetBundlesUrl = "beatrizcv.com//Data/AssetBundles/";
+        [SerializeField] private string m_AssetBundlesUrl = "beatrizsanchez1986.000webhostapp.com/AssetBundles/";
         [SerializeField] private string m_IndexFileData = "FileData.json";
 
         [SerializeField] private FileData m_FileData;

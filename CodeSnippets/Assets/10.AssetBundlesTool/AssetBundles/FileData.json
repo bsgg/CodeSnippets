@@ -20,6 +20,13 @@
       "IOSFile": "",
       "BundleVersion": 1
 
+    },
+    {
+      "ID": "assetbundlezombunnymarker",
+      "AndroidFile": "assetbundlezombunnymarker.agt",
+      "IOSFile": "",
+      "BundleVersion": 1
+
     }
   ]      
 }
