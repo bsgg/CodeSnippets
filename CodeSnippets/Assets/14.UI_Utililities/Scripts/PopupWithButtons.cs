@@ -1,10 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Utility;
+﻿using UnityEngine;
 
 namespace Utility.UI
 {
@@ -15,7 +9,6 @@ namespace Utility.UI
         public ButtonWithText MiddleBtn
         {
             get { return m_MiddleBtn; }
-            set { m_MiddleBtn = value; }
         }
 
         [SerializeField]
@@ -23,7 +16,6 @@ namespace Utility.UI
         public ButtonWithText LeftBtn
         {
             get { return m_LeftBtn; }
-            set { m_LeftBtn = value; }
         }
 
         [SerializeField]
@@ -31,8 +23,17 @@ namespace Utility.UI
         public ButtonWithText RightBtn
         {
             get { return m_RightBtn; }
-            set { m_RightBtn = value; }
         }
+
+        public override void ShowPopup(string title, string message)
+        {
+            m_MiddleBtn.Hide();
+            m_LeftBtn.Hide();
+            m_RightBtn.Hide();
+
+            base.ShowPopup(title, message);
+        }
+
 
 
         public void ShowPopup(string title, string message,
@@ -48,7 +49,6 @@ namespace Utility.UI
 
             if (middleBtnCallback != null)
             {
-                //m_MiddleBtn.Set(middleBtn, middleBtnCallback);
                 m_MiddleBtn.Set(0, middleBtn, middleBtnCallback);
                 m_MiddleBtn.Show();
             }
@@ -69,7 +69,6 @@ namespace Utility.UI
 
             if (rightBtnCallback != null)
             {
-                //m_RightBtn.Set(rightBtn, rightBtnCallback);
                 m_RightBtn.Set(0, rightBtn, rightBtnCallback);
                 m_RightBtn.Show();
             }

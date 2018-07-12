@@ -23,7 +23,7 @@ namespace Utility.UI
             set { m_MessageText.text = value; }
         }
 
-        public void ShowPopup(string title, string message)
+        public virtual void ShowPopup(string title, string message)
         {
             m_TitleText.text = title;
             m_MessageText.text = message;
