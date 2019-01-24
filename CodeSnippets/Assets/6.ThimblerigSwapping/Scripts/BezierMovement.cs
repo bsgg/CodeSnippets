@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 namespace ThimblerigSwapping
 {
     public class BezierMovement : MonoBehaviour
     {
-        public delegate void BezierAction(BezierMovement obj);
-        public BezierAction OnEndMovement;
+        public Action<BezierMovement> BezierActionCompleted;
 
         public void MoveTo(Vector3 endPosition, float totalTime = 0.6f)
         {
@@ -35,8 +35,8 @@ namespace ThimblerigSwapping
 
             float time = 0.0f;
             while (time < totalTime)
-            {                
-                transform.localPosition = Utility.MathUtility.Bezier(startPosition, controlPosition, endPosition, time / totalTime);
+            {
+                transform.localPosition = Bezier(startPosition, controlPosition, endPosition, time / totalTime);
                 time += Time.deltaTime;
                 yield return new WaitForEndOfFrame();
             }
@@ -45,12 +45,24 @@ namespace ThimblerigSwapping
             transform.localPosition = endPosition;
 
             // Finish move
-            if (OnEndMovement != null)
+            if (BezierActionCompleted != null)
             {
-                OnEndMovement(this);
+                BezierActionCompleted(this);
             }
         }
-       
+
+        /// <summary>
+        /// Bezier formule between 2 points
+        /// </summary>
+        /// <returns>The bezier.</returns>
+        /// <param name="a_start">Start Point</param>
+        /// <param name="a_control">Control bezier</param>
+        /// <param name="a_end">End point</param>
+        /// <param name="a_time">Time to generate the bezier curve</param>
+        public Vector3 Bezier(Vector3 a_start, Vector3 a_control, Vector3 a_end, float a_time)
+        {
+            return (((1 - a_time) * (1 - a_time)) * a_start) + (2 * a_time * (1 - a_time) * a_control) + ((a_time * a_time) * a_end);
+        }
     }
 
 }
