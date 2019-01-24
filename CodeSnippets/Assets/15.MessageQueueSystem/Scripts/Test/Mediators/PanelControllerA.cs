@@ -12,17 +12,15 @@ namespace MessageQueue
         private MessengerService m_messenger;
 
         private Data m_receivedData;
+               
 
-        private void Awake()
+        private void Start()
         {
             m_messenger = ServiceLocator.GetService<MessengerService>();
 
             m_panelA.OnButtonPressed += ButtonPressed;
             m_panelA.OnExitPressed += ExitPressed;
-        }
 
-        private void Start()
-        {
             m_messenger.Subscribe<Data>(Messages.SHOW_PANEL_A, ShowHandleCallback);
             m_messenger.Subscribe(Messages.HIDE_PANEL_A, HideHandleCallback);
         }

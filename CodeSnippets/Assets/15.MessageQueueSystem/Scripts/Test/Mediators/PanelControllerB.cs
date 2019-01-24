@@ -14,11 +14,13 @@ namespace MessageQueue
 
         private void Awake()
         {
-            m_messenger = ServiceLocator.GetService<MessengerService>();
+           
         }
 
         private void Start()
         {
+            m_messenger = ServiceLocator.GetService<MessengerService>();
+
             m_panelB.OnButtonPressed += ButtonPressed;
 
             m_messenger.Subscribe(Messages.HIDE_PANEL_B, HideHandleCallBack);

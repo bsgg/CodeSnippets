@@ -10,7 +10,7 @@ namespace MessageQueue
 
         private MessengerService m_messenger;
 
-        private void Awake()
+        private void Start()
         {
             m_messenger = ServiceLocator.GetService<MessengerService>();
 
@@ -21,6 +21,17 @@ namespace MessageQueue
             m_messenger.Subscribe<int>(Messages.SHOW_START_GAME_PANEL_POINTS, ShowPointsHandleCallback);
 
             m_startGamePanel.OnStartButtonPressed += ButtonPressed;
+        }       
+
+        private void OnDisable()
+        {
+            m_messenger.Unsubscribe(Messages.SHOW_PANEL_START_GAME, ShowHandleCallback);
+
+            m_messenger.Unsubscribe(Messages.HIDE_PANEL_START_GAME, HideHandleCallback);
+
+            m_messenger.Unsubscribe<int>(Messages.SHOW_START_GAME_PANEL_POINTS, ShowPointsHandleCallback);
+
+            m_startGamePanel.OnStartButtonPressed -= ButtonPressed;
         }
 
         private void ShowHandleCallback()
