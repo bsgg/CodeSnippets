@@ -6,88 +6,131 @@ namespace ThimblerigSwapping
 {
     public class SwapperController : MonoBehaviour
     {
-        [SerializeField] private int m_MaxSwaps = 3;
-        [SerializeField] private List<BezierMovement>                  m_ItemList;
-        [SerializeField] private float m_AnimationTotalTime = 0.6f;
+        [Header("Swapper Settings")]
+        [SerializeField] private SwapperData m_data;
 
-        private List<Vector3>                                          m_ItemPostionList;
+        [SerializeField] private BezierMovement m_itemPrefab;      
 
-        private int m_ItemsToSwapNumber = 2;
+        [SerializeField] private Transform m_itemParent;
+
+        private List<BezierMovement> m_itemList;
+
+        private int m_currentMaximunSwaps;  
+
+        private int m_itemsToSwapSimultaneously = 2;
 
         void Start()
         {
-            if (m_ItemList != null)
-            {
-                m_ItemPostionList = new List<Vector3>();
-                for (int i = 0; i < m_ItemList.Count; i++)
-                {
-                    m_ItemPostionList.Add(m_ItemList[i].transform.localPosition);
-                    // Add event
-                    m_ItemList[i].OnEndMovement += OnEndBezierMove;
-                }
-
-                RandomizeItems();
-            }
+            InitializeSwapper();
         }
 
-        /// <summary>
-        /// Set random swap movement
-        /// </summary>
+        private void DestroyItems()
+        {
+            if (m_itemList != null)
+            {
+                for (int i = (m_itemList.Count -1); i >= 0; i--)
+                {
+                    Destroy(m_itemList[i].gameObject);
+                }
+            }
+        }
+        private void InitializeSwapper()
+        {
+            if ((m_data == null) || (m_itemPrefab == null))
+            {
+                Debug.Log("[SwapperController.InitializeSwapper] No data found");
+
+                return;
+            }
+
+            DestroyItems();
+
+            m_itemList = new List<BezierMovement>();
+
+            Vector3 origPosition = Vector3.zero;
+            for (int i = 0; i< m_data.NumberObjectsToInstance; i++)
+            {
+                BezierMovement bezierObj = Instantiate(m_itemPrefab, Vector3.zero, Quaternion.identity, m_itemParent) as BezierMovement;
+
+                if (bezierObj != null)
+                {
+                    bezierObj.transform.localPosition = origPosition;
+
+                    bezierObj.BezierActionCompleted += OnBezierAnimationCompleted;
+
+                    m_itemList.Add(bezierObj);
+                }
+
+                origPosition.x += m_data.DistanceBetweenItems;
+            }
+
+            m_currentMaximunSwaps = m_data.MaximunSwaps;
+
+            RandomizeItems();
+        }
+
         private void RandomizeItems()
         {
-            if (m_ItemList != null)
+            if (m_itemList != null)
             {
                 // Create random array and select two items
-                int[] randomIndexList = new int[m_ItemList.Count];
-                for (int i = 0; i < m_ItemList.Count; i++)
+                int[] randomIndexList = new int[m_itemList.Count];
+                for (int i = 0; i < m_itemList.Count; i++)
                 {
                     randomIndexList[i] = i;
                 }
 
                 // Shufle indeces
-                Utility.MathUtility.Shuffle(ref randomIndexList);
+                Shuffle(ref randomIndexList);
 
                 // Select the first 2 items
                 int indexA = randomIndexList[0];
                 int indexB = randomIndexList[1];
 
                 //Select those elements
-                BezierMovement itemA = m_ItemList[indexA];
-                itemA.MoveTo(m_ItemPostionList[indexB], m_AnimationTotalTime);
-             
+                BezierMovement itemA = m_itemList[indexA];
+                //itemA.MoveTo(m_itemPostionList[indexB], m_data.SwapAnimationTime);
+                itemA.MoveTo(m_itemList[indexB].transform.localPosition, m_data.SwapAnimationTime);
 
-                BezierMovement itemB = m_ItemList[indexB];
-                itemB.MoveTo(m_ItemPostionList[indexA], m_AnimationTotalTime);
+                BezierMovement itemB = m_itemList[indexB];
+                //itemB.MoveTo(m_itemPostionList[indexA], m_data.SwapAnimationTime);
+                itemB.MoveTo(m_itemList[indexA].transform.localPosition, m_data.SwapAnimationTime);
 
-                m_ItemsToSwapNumber = 2;
+                m_itemsToSwapSimultaneously = 2;
 
                 // Before start movement, swap items
-                BezierMovement auxObj = m_ItemList[indexB];
-                m_ItemList[indexB] = m_ItemList[indexA];
-                m_ItemList[indexA] = auxObj;
-
+                BezierMovement auxObj = m_itemList[indexB];
+                m_itemList[indexB] = m_itemList[indexA];
+                m_itemList[indexA] = auxObj;
             }
         }
 
-        /// <summary>
-        /// Event handle when a bezier movement is finished
-        /// </summary>
-        /// <param name="obj"></param>
-        public void OnEndBezierMove(BezierMovement obj)
+        public void Shuffle<T>(ref T[] array)
         {
-            //obj.OnEndMovement -= OnEndBezierMove;
-            m_ItemsToSwapNumber -= 1;
+            for (int i = 0; i < array.Length; i++)
+            {
+                int idx = Random.Range(i, array.Length);
+                //swap elements
+                T tmp = array[i];
+                array[i] = array[idx];
+                array[idx] = tmp;
+            }
+        }
 
-            // All items have been swaped
-            if (m_ItemsToSwapNumber <= 0)
+        public void OnBezierAnimationCompleted(BezierMovement a_obj)
+        {
+            m_itemsToSwapSimultaneously -= 1;
+
+            // Check if all items have been swapped
+            if (m_itemsToSwapSimultaneously <= 0)
             {
                 // New random swap until all swaps have finished
-                m_MaxSwaps--;
-                if (m_MaxSwaps > 0)
+                m_currentMaximunSwaps--;
+                if (m_currentMaximunSwaps > 0)
                 {
                     RandomizeItems();
-                }                
-            }         
+                }
+            }
         }
-      }
+    }
 }
