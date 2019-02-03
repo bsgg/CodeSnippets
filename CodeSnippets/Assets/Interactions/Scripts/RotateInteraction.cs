@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Interactions
+namespace CodeSnippets.Interactions
 {
     public class RotateInteraction : BaseInteraction
     {

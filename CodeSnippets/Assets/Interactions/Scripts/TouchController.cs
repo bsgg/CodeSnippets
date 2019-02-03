@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Interactions
+namespace CodeSnippets.Interactions
 {
     public class TouchController : MonoBehaviour
     {
