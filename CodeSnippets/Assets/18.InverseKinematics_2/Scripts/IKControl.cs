@@ -30,9 +30,11 @@ namespace IKController
         [SerializeField]
         private bool m_processIK = false;
 
-        [Header("Feet Grounder")]
+        [SerializeField] private float angleDegToFront;
+
+        //[Header("Feet Grounder")]
         //https://www.youtube.com/watch?v=MonxKdgxi2w
-        [SerializeField]
+        /*[SerializeField]
         private bool m_enableFeetIK = false;
         [Range(0,2)] [SerializeField] private float heightFromGroundRaycast = 1.14f;
         [Range(0, 2)] [SerializeField] private float raycastDownDistance = 1.5f;
@@ -49,7 +51,7 @@ namespace IKController
         public string leftFootAnimVariableName = "LeftFootCurve";
         public string rightFootAnimVariableName = "RightFootCurve";
         public bool showSolverDebug = true;
-
+        */
         private void Awake()
         {
            // m_animator = GetComponent<Animator>();
@@ -68,13 +70,9 @@ namespace IKController
             m_offsetHeight = m_headFollower.transform.transform.position.y - m_hipFollower.transform.position.y;
         }
 
-        private void Update()
-        {
-            
-        }
 
 
-        [SerializeField] private float angleDegToFront;
+        
         private void LateUpdate()
         {
             //if (m_headFollower != null)
@@ -185,19 +183,19 @@ namespace IKController
             //m_avatar.bodyPosition = m_hipFollower.position;
 
             // Move the pelvis with the head follower
-            if (!m_enableFeetIK)
+            //if (!m_enableFeetIK)
             {
-                m_avatar.SetIKPosition(AvatarIKGoal.RightFoot, m_rightFootFollower.position);
-                m_avatar.SetIKRotation(AvatarIKGoal.RightFoot, m_rightFootFollower.rotation);
+               // m_avatar.SetIKPosition(AvatarIKGoal.RightFoot, m_rightFootFollower.position);
+                //m_avatar.SetIKRotation(AvatarIKGoal.RightFoot, m_rightFootFollower.rotation);
 
-                m_avatar.SetIKPosition(AvatarIKGoal.LeftFoot, m_leftFootFollower.position);
-                m_avatar.SetIKRotation(AvatarIKGoal.LeftFoot, m_leftFootFollower.rotation);
+               //m_avatar.SetIKPosition(AvatarIKGoal.LeftFoot, m_leftFootFollower.position);
+                //m_avatar.SetIKRotation(AvatarIKGoal.LeftFoot, m_leftFootFollower.rotation);
 
                
     
             }
 
-            if (!m_enableFeetIK)
+            //if (!m_enableFeetIK)
             {
                 m_avatar.bodyPosition = new Vector3(m_headFollower.position.x, m_hipFollower.transform.position.y, m_headFollower.position.z);
 
@@ -219,13 +217,13 @@ namespace IKController
                 //rigthLowerLeg.rotation = m_rightFootFollower.rotation;
                 //rigthUpperLeg.rotation = m_rightFootFollower.rotation;
 
-                m_avatar.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1.0f);
-                m_avatar.SetIKHintPositionWeight(AvatarIKHint.RightKnee, 1.0f);
+               // m_avatar.SetIKHintPositionWeight(AvatarIKHint.LeftKnee, 1.0f);
+               // m_avatar.SetIKHintPositionWeight(AvatarIKHint.RightKnee, 1.0f);
                 //Debug.Log(pos);
             }
 
 
-            if (m_enableFeetIK)
+            /*if (m_enableFeetIK)
             {
                 // MOVE PELVIS
                 MovePelvisHeight();
@@ -233,13 +231,14 @@ namespace IKController
                 // right foot ik positions and rotations
                 MoveFeetToIkPoint(AvatarIKGoal.RightFoot, rightFootIKPosition, rightFootIKRotation, ref lastRightFootPositionY);
                 MoveFeetToIkPoint(AvatarIKGoal.LeftFoot, leftFootIKPosition, leftFootIKRotation, ref lastLeftFootPositionY);
-            }
+            }*/
 
         }
 
 
         #region FeetGrounding
 
+        /*
         /// <summary>
         /// We are updating the AdjustFeetTarget method and also find the position of each foot inside our Solver Position
         /// </summary>
@@ -347,6 +346,8 @@ namespace IKController
             feetPositions = m_avatar.GetBoneTransform(foot).position;
             feetPositions.y = transform.position.y + heightFromGroundRaycast;
         }
+         */
         #endregion  FeetGrounding
     }
+
 }
