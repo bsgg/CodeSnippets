@@ -32,6 +32,10 @@ namespace IKController
 
         [SerializeField] private float angleDegToFront;
 
+        [Header("Look At")]
+        [SerializeField] private Transform m_lookAtTarget;
+        [SerializeField] private float m_lookAtWeight = 1.0f;
+
         //[Header("Feet Grounder")]
         //https://www.youtube.com/watch?v=MonxKdgxi2w
         /*[SerializeField]
@@ -121,7 +125,7 @@ namespace IKController
 
                 // Spine rotate with the head
                 m_spine.transform.rotation = Quaternion.LookRotation(m_headFollower.forward, transform.up);
-                m_avatar.SetLookAtWeight(1.0f);             
+                //m_avatar.SetLookAtWeight(m_lookAtWeight);             
                     
 
                    
@@ -177,7 +181,11 @@ namespace IKController
             // Left Foot
             m_avatar.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1);
             m_avatar.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1);
-           
+
+            // Look at
+            m_avatar.SetLookAtPosition(m_lookAtTarget.position);
+            m_avatar.SetLookAtWeight(m_lookAtWeight);
+
 
             // Move the pelvis with the hip follower
             //m_avatar.bodyPosition = m_hipFollower.position;
