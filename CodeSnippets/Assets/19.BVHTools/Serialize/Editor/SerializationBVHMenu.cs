@@ -46,11 +46,7 @@ namespace BVHTools
 
         private static bool isSkeletonInitialized = false;
 
-       // private Animator animator = null;
-
-       // private SkeletonMapper skeletonMapper = null;
-
-        [MenuItem("Aero Content/Serialize BVH Files")]
+        [MenuItem("BVH Tools/Serialize BVH Files")]
         private static void InitEditorWindow()
         {
             initialize = false;
@@ -69,92 +65,32 @@ namespace BVHTools
         private void OnGUIMenu()
         {
             Color origColor = GUI.backgroundColor;
+            
+            EditorGUILayout.Space();
 
-            /*if (!initialize)
-            {
-                if (animator == null)
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("READY TO SERIALIZE BVH FILES", EditorStyles.boldLabel, GUILayout.Width(800));
+
+            if (GUILayout.Button("SERIALIZE BVH FILES", GUILayout.ExpandWidth(true)))
+            {                    
+                string filePath = EditorUtility.OpenFolderPanel("BVH Directory", "D:\\", "");
+
+                if (!string.IsNullOrEmpty(filePath))
                 {
-                    EditorGUILayout.Space();
+                    Debug.Log("FILE SELECTED " + filePath);
 
-                    EditorGUILayout.LabelField("SELECT THE GAMEOBJECT WITH A HUMANOID ANIMATOR AVATAR", EditorStyles.boldLabel, GUILayout.Width(800));
-
-                    EditorGUILayout.Space();
-
-                    GUI.backgroundColor = Color.cyan;
-                    Rect objectFieldRect = new Rect(5, 40, position.width - 6, 20);
-
-                    animator = (Animator)EditorGUI.ObjectField(objectFieldRect, "DEPENDENCY:", animator, typeof(Animator), true);
-
-                    GUI.backgroundColor = origColor;
+                    EditorCoroutine.Start(SerializeBVHFiles(filePath));
                 }
-                else
-                {
-                    if (!isSkeletonInitialized)
-                    {
-                        skeletonMapper = animator.GetComponent<SkeletonMapper>();
-                        if (skeletonMapper == null)
-                        {
-                            skeletonMapper = animator.gameObject.AddComponent<SkeletonMapper>();
-                        }
-
-                        if (skeletonMapper != null)
-                        {
-                            skeletonMapper.GenerateBoneMap(animator);
-
-                            if (!skeletonMapper.Initialized)
-                            {
-                                isSkeletonInitialized = false;
-                                skeletonMapper = null;
-                            }
-                            else
-                            {
-                                isSkeletonInitialized = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-
-                        initialize = true;
-                    }
-                }
-            }
-            else*/
-            {
-                EditorGUILayout.Space();
-
-                EditorGUILayout.Space();
-
-                EditorGUILayout.LabelField("READY TO SERIALIZE BVH FILES", EditorStyles.boldLabel, GUILayout.Width(800));
-
-                if (GUILayout.Button("SERIALIZE BVH FILES", GUILayout.ExpandWidth(true)))
-                {                    
-                    string filePath = EditorUtility.OpenFolderPanel("BVH Directory", "D:\\RecordSessions", "");
-
-                    if (!string.IsNullOrEmpty(filePath))
-                    {
-                        Debug.Log("FILE SELECTED " + filePath);
-
-                        EditorCoroutine.Start(SerializeBVHFiles(filePath));
-                    }
                     
-                }
-
-                EditorGUILayout.Space();
             }
+
+            EditorGUILayout.Space();
+            
         }
 
         private IEnumerator SerializeBVHFiles(string bvhDirectory)
-        {
-           /* if ((skeletonMapper == null) || (!skeletonMapper.Initialized))
-            {
-                bool answer = EditorUtility.DisplayDialog("Aero Tool", "Error: The Animator selected doesn't contain a SkeletonMapper", "OK");
-
-                if (answer)
-                {
-                    yield break;
-                }
-            }*/
+        {         
 
             DirectoryInfo dir = new DirectoryInfo(bvhDirectory);
             FileInfo[] infoFiles = dir.GetFiles("*.bvh*");

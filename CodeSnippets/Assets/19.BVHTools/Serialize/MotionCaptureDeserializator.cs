@@ -76,7 +76,7 @@ namespace BVHTools
         /// <param name="skeletonMapper"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static AnimationClip CreateAnimationClip(SkeletonMapper skeletonMapper, MotionData inMotionData)
+        public static AnimationClip CreateAnimationClip(SkeletonMapper skeletonMapper, MotionData inMotionData, bool blender)
         {            
             if ((inMotionData == null) || (skeletonMapper == null)) return null;
 
@@ -120,6 +120,12 @@ namespace BVHTools
                         -inMotionData.bones[iBone].offsetX,
                         inMotionData.bones[iBone].offsetY,
                         inMotionData.bones[iBone].offsetZ);
+
+                    // Correct Rotation for blender
+                    if (blender)
+                    {
+                        offset = new Vector3(-inMotionData.bones[iBone].offsetX, inMotionData.bones[iBone].offsetZ, -inMotionData.bones[iBone].offsetY);
+                    }
                 }
                 else
                 {
@@ -187,6 +193,14 @@ namespace BVHTools
                         float yPosValue = inMotionData.bones[iBone].keyframes[1, iFrame];
                         float zPosValue = inMotionData.bones[iBone].keyframes[2, iFrame];
 
+                        // Corrected if imported from blender
+                        if (blender)
+                        {
+                            xPosValue = -inMotionData.bones[iBone].keyframes[0, iFrame];
+                            yPosValue = inMotionData.bones[iBone].keyframes[2, iFrame];
+                            zPosValue = -inMotionData.bones[iBone].keyframes[1, iFrame];
+                        }
+
                         Vector3 position = new Vector3(xPosValue, yPosValue, zPosValue);
                         Vector3 transformedPosition = hBone.BoneTransform.parent.InverseTransformPoint(position + skeletonMapper.animator.transform.position + offset);
 
@@ -221,6 +235,15 @@ namespace BVHTools
                     float yValue = -rotation.y;
                     float zValue = -rotation.z;
                     float wValue = rotation.w;
+
+                    // Corrected from blender
+                    if (blender)
+                    {
+                        xValue = rotation.x;
+                        yValue = -rotation.z;
+                        zValue = rotation.y;
+                        wValue = rotation.w;
+                    }
 
                     if (isRoot && (nChannels == 6)) //only root has position and Rotation, 
                     {

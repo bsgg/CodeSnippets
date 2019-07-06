@@ -13,21 +13,17 @@ namespace BVHTools
 
             TestBVH test = (TestBVH)target;
 
-            if (GUILayout.Button("LoadBVH"))
+            if (GUILayout.Button("Play BVH Animation"))
             {
                 test.LoadBVH();
             }
 
 
-            if (GUILayout.Button("Start Record BVH"))
+            if (GUILayout.Button("Play dat Animation"))
             {
-
+                test.LoadDatAnimation();
             }
 
-            if (GUILayout.Button("Stop Record BVH"))
-            {
-
-            }
         }
     }
 }

@@ -8,9 +8,6 @@ namespace FitXR.AeroContentTool
     {
         private Animator animator;
 
-       // [Header("Settings")]
-       // [SerializeField] private bool leftHand = true;
-
         private List<Transform> lhProximalBones;
         private List<Transform> rhProximalBones;
 
@@ -44,12 +41,29 @@ namespace FitXR.AeroContentTool
         private Transform lhThumbDistal;
         private Transform rhThumbDistal;
 
+        [SerializeField] private bool applyHandRotation = false;
+        [SerializeField] private Vector3 leftHandRotation = new Vector3(0.0f, 0.0f, 0.0f);
+        [SerializeField] private Vector3 rightHandRotation = new Vector3(0.0f, 0.0f, 0.0f);
+        private Transform leftHand;
+        private Transform rightHand;
+
+        [SerializeField] private bool applyFeetRotation = false;
+        [SerializeField] private Vector3 leftFootRotation = new Vector3(0.0f, 0.0f, 0.0f);
+        [SerializeField] private Vector3 rightFootRotation = new Vector3(0.0f, 0.0f, 0.0f);
+        private Transform leftFoot;
+        private Transform rightFoot;
 
         void Awake()
         {
             animator = GetComponent<Animator>();
 
             if (animator == null) return;
+
+            leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+            rightHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+
+            leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+            rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
 
             lhProximalBones = new List<Transform>();
             rhProximalBones = new List<Transform>();            
@@ -152,6 +166,19 @@ namespace FitXR.AeroContentTool
 
             rhThumbDistal.localRotation = Quaternion.Euler(new Vector3(-lhThumbDistalRotation.x, -lhThumbDistalRotation.y, -lhThumbDistalRotation.z));
 
+
+            if (applyHandRotation)
+            {
+                leftHand.localRotation = Quaternion.Euler(new Vector3(leftHandRotation.x, leftHandRotation.y, leftHandRotation.z));
+                rightHand.localRotation = Quaternion.Euler(new Vector3(rightHandRotation.x, rightHandRotation.y, rightHandRotation.z));
+            }
+
+
+            if (applyFeetRotation)
+            {
+                leftFoot.localRotation = Quaternion.Euler(new Vector3(leftFootRotation.x, leftFootRotation.y, leftFootRotation.z));
+                rightFoot.localRotation = Quaternion.Euler(new Vector3(rightFootRotation.x, rightFootRotation.y, rightFootRotation.z));
+            }
         }
 
     }
