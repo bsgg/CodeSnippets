@@ -15,7 +15,9 @@ namespace BVHTools
         [Header("Dat Animation Files")]
         [SerializeField] private string datFileToLoad;
 
-        private BVHAnimationLoader bvhLoader;
+        [SerializeField] private bool importFromBlender = false;
+
+       private BVHAnimationLoader bvhLoader;
 
 
         private SkeletonMapper skeletonMapper;
@@ -32,7 +34,7 @@ namespace BVHTools
             bvhLoader.targetAvatar = animator;
             bvhLoader.anim = animator.GetComponent<Animation>();
 
-            bvhLoader.blender = true;
+            bvhLoader.blender = importFromBlender;
             bvhLoader.standardBoneNames = true;
             bvhLoader.flexibleBoneNames = false;
             bvhLoader.respectBVHTime = true;
@@ -53,10 +55,6 @@ namespace BVHTools
 
         public void LoadDatAnimation()
         {
-           
-
-
-
             skeletonMapper = GetComponent<SkeletonMapper>();
 
             if (skeletonMapper == null)
@@ -70,7 +68,7 @@ namespace BVHTools
 
             if (data != null)
             {
-                AnimationClip clip = MotionCaptureDeserializator.CreateAnimationClip(skeletonMapper, data, true);
+                AnimationClip clip = MotionCaptureDeserializator.CreateAnimationClip(skeletonMapper, data, importFromBlender);
 
                 if (clip == null)
                 {
