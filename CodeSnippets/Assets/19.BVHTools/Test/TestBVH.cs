@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using RootMotion.FinalIK;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -8,7 +9,7 @@ namespace BVHTools
     public class TestBVH : MonoBehaviour
     {
         [SerializeField] private Animator animator;
-        [SerializeField] private Animation animation;
+        [SerializeField] private new Animation animation;
 
        [SerializeField] private string bvhFileToLoad;
 
@@ -17,10 +18,25 @@ namespace BVHTools
 
         [SerializeField] private bool importFromBlender = false;
 
-       private BVHAnimationLoader bvhLoader;
+        private BVHAnimationLoader bvhLoader;
 
 
         private SkeletonMapper skeletonMapper;
+
+        [SerializeField] private GameObject[] avatarMeshes;
+
+
+        [Header("Final IK")]
+        [SerializeField] private VRIK ik;
+        [SerializeField] private VRIKCalibrator.Settings settings;
+        [SerializeField] private Transform headTracker;
+        [SerializeField] private Transform bodyTracker;
+        [SerializeField] private Transform leftHandTracker;
+        [SerializeField] private Transform rightHandTracker;
+        [SerializeField] private Transform leftFootTracker;
+        [SerializeField] private Transform rightFootTracker;
+
+        private VRIKCalibrator.CalibrationData calibrationData = new VRIKCalibrator.CalibrationData();
 
         public void LoadBVH()
         {
@@ -90,6 +106,18 @@ namespace BVHTools
             {
                 Debug.Log("<color=yellow>" + "Unable to Create Animation Clip from " + datFileToLoad + "</color>");
             }
+        }
+
+
+        public void CalibrateAvatarFinalIK()
+        {
+            for (int i=0;i< avatarMeshes.Length; i++)
+            {
+                avatarMeshes[i].SetActive(false);
+            }
+
+            calibrationData = VRIKCalibrator.Calibrate(ik, settings, headTracker, bodyTracker, leftHandTracker, rightHandTracker, leftFootTracker, rightFootTracker);
+            
         }
     }
 }

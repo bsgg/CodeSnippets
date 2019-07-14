@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FitXR.AeroContentTool
+namespace BVHTools
 {
     public class HandModifier : MonoBehaviour
     {

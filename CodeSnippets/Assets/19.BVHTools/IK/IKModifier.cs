@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IK
+namespace IKModifier
 {
     public class IKModifier : MonoBehaviour
     {

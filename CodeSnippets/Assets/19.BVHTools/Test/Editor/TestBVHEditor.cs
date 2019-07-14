@@ -19,9 +19,14 @@ namespace BVHTools
             }
 
 
-            if (GUILayout.Button("Play dat Animation"))
+            if (GUILayout.Button("Play DAT Animation"))
             {
-                test.LoadDatAnimation();
+                test.LoadDatAnimation(); 
+            }
+
+            if (GUILayout.Button("Calibrate Avatar with Final IK"))
+            {
+                test.CalibrateAvatarFinalIK();
             }
 
         }
