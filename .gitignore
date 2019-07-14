@@ -4,6 +4,7 @@
 /[Bb]uild/
 /[Bb]uilds/
 /Assets/AssetStoreTools*
+/Assets/19.BVHTools/Plugins/RootMotion/*
 Temp/
 Library/
 CodeSnippets/Temp/
