@@ -27,7 +27,45 @@ public class AttributeManager : MonoBehaviour
             if (comp != null)
             {
                 //attributes |= MAGIC; // Add attribute magic
-                attributes |= comp.AttributeValue; // Add the attribute value
+
+                switch (comp.powerUpType)
+                {
+                    case PowerUpAttribute.PowerUpType.AddAttribute:
+
+                        attributes |= comp.AttributeValue; // Add the attribute value (OR)
+                     break;
+
+                    case PowerUpAttribute.PowerUpType.RevertAttribute:
+
+                        // Revert the attribute (And and not)
+                        // Example, the attribute Matig has value 8 = 0 1 0 0 0
+                        // The character has 8 (Magic) +  2 (Fly) attributes =  0 1 0 1 0
+                        // To revert, we need to negate Magic = 1 0 1 1 1
+                        // And we need to use & to prevent the rest of attributes to be changed
+                        //    Current Attributes     =     0 1 0 1 0
+                        // Remove Magic              =  &  1 0 1 1 1   
+                        // Result only Fly           =     0 0 0 1 0
+                        attributes &= ~comp.AttributeValue;
+                    break;
+
+                    case PowerUpAttribute.PowerUpType.AddMultiple:
+                        // Add multiples
+                        attributes |= (PowerUpAttribute.MAGIC | PowerUpAttribute.INTELLIGENCE | PowerUpAttribute.CHARISMA);
+                     break;
+
+                    case PowerUpAttribute.PowerUpType.RevertMultiple:
+                        // Revert multiples
+                        attributes &= ~(PowerUpAttribute.INTELLIGENCE | PowerUpAttribute.MAGIC);
+                    break;
+
+                    case PowerUpAttribute.PowerUpType.Reset:
+                        // Revert multiples
+                        attributes = 0;
+                    break;
+
+                }
+
+
             }
         }
     }
