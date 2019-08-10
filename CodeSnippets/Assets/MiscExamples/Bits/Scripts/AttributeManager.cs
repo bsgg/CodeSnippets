@@ -11,7 +11,7 @@ public class AttributeManager : MonoBehaviour
     public Text attributeDisplay;
 
     //32 bits long for attributes
-    int attributes = 0; // No attributes
+    public int attributes = 0; // No attributes
 
     void Start()
     {
@@ -50,12 +50,12 @@ public class AttributeManager : MonoBehaviour
 
                     case PowerUpAttribute.PowerUpType.AddMultiple:
                         // Add multiples
-                        attributes |= (PowerUpAttribute.MAGIC | PowerUpAttribute.INTELLIGENCE | PowerUpAttribute.CHARISMA);
+                        attributes |= ((int)PowerUpAttribute.AttributeType.MAGIC | (int)PowerUpAttribute.AttributeType.INTELLIGENCE | (int)PowerUpAttribute.AttributeType.CHARISMA);
                      break;
 
                     case PowerUpAttribute.PowerUpType.RevertMultiple:
                         // Revert multiples
-                        attributes &= ~(PowerUpAttribute.INTELLIGENCE | PowerUpAttribute.MAGIC);
+                        attributes &= ~((int)PowerUpAttribute.AttributeType.INTELLIGENCE | (int)PowerUpAttribute.AttributeType.MAGIC);
                     break;
 
                     case PowerUpAttribute.PowerUpType.Reset:
