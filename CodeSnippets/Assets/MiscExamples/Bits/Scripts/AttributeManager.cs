@@ -28,14 +28,13 @@ public class AttributeManager : MonoBehaviour
 
             if (key != null)
             {
-                Debug.Log("KeyDoor.Attribute " + key.keyMaskValue);
-
-                if (key.grantsAllKeys)
+                Debug.Log("KeyDoor.Attribute " + key.Key);
+                if (key.Key == KeyDoor.KeyType.GOLD) // Add all of them
                 {
-
+                    keys |= ((int)KeyDoor.KeyType.BLUE | (int)KeyDoor.KeyType.GREEN | (int)KeyDoor.KeyType.PURPLE | (int)KeyDoor.KeyType.RED);
                 }else
                 {
-                    keys |= key.keyMaskValue;
+                    keys |= (int)key.Key;
                 }
             }
         }
