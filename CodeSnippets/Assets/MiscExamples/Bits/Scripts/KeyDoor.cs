@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class KeyDoor : MonoBehaviour
 {
-    public PowerUpAttribute.AttributeType keyAttribute = PowerUpAttribute.AttributeType.NONE;
+    public enum KeyType { NONE = 0, RED = 1, PURPLE = 2, GREEN = 4, BLUE = 8, GOLD = 16 };
 
-    public int keyMaskValue {get; set;}
+    public KeyType Key = KeyType.NONE;
 
-    public bool GrantsAllAttributes = false;
+    public int keyMaskValue { get; set; }
+
+    public bool grantsAllKeys = false;
 
     void Start()
     {
-        keyMaskValue = (int)keyAttribute;
+        keyMaskValue = (int)Key;
     }
 
 }

@@ -13,6 +13,8 @@ public class AttributeManager : MonoBehaviour
     //32 bits long for attributes
     public int attributes = 0; // No attributes
 
+    public int keys = 0;
+
     void Start()
     {
         
@@ -20,6 +22,49 @@ public class AttributeManager : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (other.gameObject.tag == "Key")
+        { 
+            KeyDoor key = other.GetComponent<KeyDoor>();
+
+            if (key != null)
+            {
+                Debug.Log("KeyDoor.Attribute " + key.keyMaskValue);
+
+                if (key.grantsAllKeys)
+                {
+
+                }else
+                {
+                    keys |= key.keyMaskValue;
+                }
+            }
+        }
+
+       /* if (other.gameObject.tag == "Door")
+        {
+            Door door = other.GetComponent<Door>();
+
+            if (door != null)
+            {
+               Debug.Log("door.doorMaskValue " + door.doorMaskValue);
+
+                if ((keys & door.doorMaskValue) != 0)
+                {
+                    Debug.Log("I can go I have the key ");
+
+                    //door.EnableTrigger();
+                }else
+                {
+                    Debug.Log("I CAN'T go I DON'T have the key ");
+
+                    //door.DisableTrigger();
+                }
+
+            }
+        }*/
+
+
+
         if (other.gameObject.tag == "POWERUPATTRIBUTE")
         {
             PowerUpAttribute comp = other.GetComponent<PowerUpAttribute>();
@@ -75,7 +120,8 @@ public class AttributeManager : MonoBehaviour
         Vector3 screenPoint = Camera.main.WorldToScreenPoint(this.transform.position);
         attributeDisplay.transform.position = screenPoint + new Vector3(0,-50,0);
 
-        attributeDisplay.text = "Attributes: " + Convert.ToString(attributes, 2).PadLeft(8,'0');
+        //attributeDisplay.text = "Attributes: " + Convert.ToString(attributes, 2).PadLeft(8,'0');
+        attributeDisplay.text = "Keys: " + Convert.ToString(keys, 2).PadLeft(8, '0');
     }
        
 }
