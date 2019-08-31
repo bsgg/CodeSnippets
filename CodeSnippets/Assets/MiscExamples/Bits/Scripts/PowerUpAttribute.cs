@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PowerUpAttribute : MonoBehaviour
 {
-    public enum PowerUpType { AddAttribute, RevertAttribute, AddMultiple, RevertMultiple, Reset };
+    public enum PowerUpType { AddAttribute, RevertAttribute, AddMultiple, RevertMultiple, Reset, Toggle };
 
     public PowerUpType powerUpType = PowerUpType.AddAttribute;
 

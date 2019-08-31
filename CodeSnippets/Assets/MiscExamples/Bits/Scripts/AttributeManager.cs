@@ -79,6 +79,19 @@ public class AttributeManager : MonoBehaviour
                         attributes |= comp.AttributeValue; // Add the attribute value (OR)
                      break;
 
+                    case PowerUpAttribute.PowerUpType.Toggle:
+
+                        attributes ^= comp.AttributeValue; // toggle the attribute value on and off (XOR, exclusive or)
+
+                        /*a | b | a ^ b
+                            --|---|------
+                            0 | 0 | 0
+                            0 | 1 | 1
+                            1 | 0 | 1
+                            1 | 1 | 0*/
+
+                        break;
+
                     case PowerUpAttribute.PowerUpType.RevertAttribute:
 
                         // Revert the attribute (And and not)
