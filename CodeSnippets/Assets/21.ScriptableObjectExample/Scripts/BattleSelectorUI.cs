@@ -1,0 +1,62 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace SnippetsCode.ScriptableObjectExample
+{
+    public class BattleSelectorUI : MonoBehaviour
+    {
+        [SerializeField] private List<CharacterSelectorUI> characterCardList = new List<CharacterSelectorUI>();
+
+        [SerializeField] private Button StartBattleButton;
+
+        [SerializeField] private Text stateTextBattle;
+
+        private int selectedCharacters = 0;
+
+        void Start()
+        {
+            selectedCharacters = 0;
+
+            stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
+
+            for (int i=0; i< characterCardList.Count; i++)
+            {
+                characterCardList[i].description.text = "Hero " + (i + 1) + "\nPower Attack: " + GameManagerSOE.instance.gameBalanceData.PowerAttack;
+                characterCardList[i].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
+                characterCardList[i].isSelected = false;
+            }
+        }
+
+
+        public void OnSelectedCharacter(int index)
+        {
+            if ((index < 0) || (index >= characterCardList.Count)) return;
+            if (characterCardList[index].isSelected)
+            {
+                characterCardList[index].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
+                characterCardList[index].isSelected = false;
+                selectedCharacters -= 1;
+            }else
+            {
+                characterCardList[index].imageBackground.color = GameManagerSOE.instance.gameBalanceData.SelectedColorCharacter;
+                characterCardList[index].isSelected = true;
+                selectedCharacters += 1;
+            }
+
+            if (selectedCharacters >= GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
+            {
+                stateTextBattle.text = "Ready for battle";
+            }else
+            {
+                stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
+            }
+        }
+
+        void Update()
+        {
+
+        }
+    }
+}
