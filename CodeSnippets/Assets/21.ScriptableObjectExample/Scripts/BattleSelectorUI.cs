@@ -15,15 +15,20 @@ namespace SnippetsCode.ScriptableObjectExample
 
         private int selectedCharacters = 0;
 
+        public CharacterStats randomBoss;
+
         void Start()
         {
+            
+
+
             selectedCharacters = 0;
 
             stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
 
-            for (int i=0; i< characterCardList.Count; i++)
+            for (int i=0; i< GameManagerSOE.instance.gameBalanceData.HeroList.Count; i++)
             {
-                characterCardList[i].description.text = "Hero " + (i + 1) + "\nPower Attack: " + GameManagerSOE.instance.gameBalanceData.PowerAttack;
+                characterCardList[i].description.text = GameManagerSOE.instance.gameBalanceData.HeroList[i].Name + "\nPower Attack: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].PowerAttack + "\nStrong Against: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].StrongAgainst;
                 characterCardList[i].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
                 characterCardList[i].isSelected = false;
             }
@@ -53,10 +58,6 @@ namespace SnippetsCode.ScriptableObjectExample
                 stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
             }
         }
-
-        void Update()
-        {
-
-        }
+        
     }
 }
