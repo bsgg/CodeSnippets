@@ -5,13 +5,15 @@ using UnityEngine;
 namespace SnippetsCode.ScriptableObjectExample
 {
     public enum SkillType { Fire, Water, Air, Electricity, Venon, TOTALSKILLS };
+
     [System.Serializable]
     public class CharacterStats
     {
         public string Name;
         public float Health;
         public float PowerAttack;
-        public SkillType StrongAgainst;       
+        public SkillType StrongAgainst;
+        public Color ColorHero;
     }
 
     [CreateAssetMenu(fileName = "GameBalance", menuName = "CodeSnippets/GameBalance", order = 1)]

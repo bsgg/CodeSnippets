@@ -7,7 +7,7 @@ namespace SnippetsCode.ScriptableObjectExample
 {
     public class BattleSelectorUI : MonoBehaviour
     {
-        [SerializeField] private List<CharacterSelectorUI> characterCardList = new List<CharacterSelectorUI>();
+        [SerializeField] private List<CharacterSelectorUI> characterCardList;
 
         [SerializeField] private Button StartBattleButton;
 
@@ -18,10 +18,7 @@ namespace SnippetsCode.ScriptableObjectExample
         public CharacterStats randomBoss;
 
         void Start()
-        {
-            
-
-
+        {            
             selectedCharacters = 0;
 
             stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
@@ -29,6 +26,7 @@ namespace SnippetsCode.ScriptableObjectExample
             for (int i=0; i< GameManagerSOE.instance.gameBalanceData.HeroList.Count; i++)
             {
                 characterCardList[i].description.text = GameManagerSOE.instance.gameBalanceData.HeroList[i].Name + "\nPower Attack: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].PowerAttack + "\nStrong Against: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].StrongAgainst;
+                characterCardList[i].imageCharacter.color = GameManagerSOE.instance.gameBalanceData.HeroList[i].ColorHero;
                 characterCardList[i].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
                 characterCardList[i].isSelected = false;
             }

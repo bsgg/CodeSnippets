@@ -9,6 +9,7 @@ namespace SnippetsCode.ScriptableObjectExample
     {
         public Text description;
         public Image imageBackground;
+        public Image imageCharacter;
         public Button charButton;
 
         public bool isSelected { get; set; }       
