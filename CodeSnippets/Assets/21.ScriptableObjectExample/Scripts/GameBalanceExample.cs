@@ -21,8 +21,9 @@ namespace SnippetsCode.ScriptableObjectExample
     {       
 
         [Header("Hero Stats")]
-        public int MinimunHeroesForBattle = 3;
+        public int MinimunHeroesForBattle = 2;
 
+        // List of heroes
         public List<CharacterStats> HeroList;
 
         [Header("Boss Stats")]
@@ -31,8 +32,6 @@ namespace SnippetsCode.ScriptableObjectExample
         public int BossMinPowerAttackRange = 2;
         public int BossMaxPowerAttackRange = 10; 
 
-        [Header("UI")]
-        public Color SelectedColorCharacter;
-        public Color UnSelectedColorCharacter;
+       
     }
 }

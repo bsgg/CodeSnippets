@@ -17,17 +17,31 @@ namespace SnippetsCode.ScriptableObjectExample
 
         public CharacterStats randomBoss;
 
+
+        [SerializeField] private Color selectedColorCharacter;
+        [SerializeField] private Color unSelectedColorCharacter;
+
         void Start()
         {            
             selectedCharacters = 0;
 
             stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
 
-            for (int i=0; i< GameManagerSOE.instance.gameBalanceData.HeroList.Count; i++)
+            int numberHeroes = GameManagerSOE.instance.gameBalanceData.HeroList.Count;
+            for (int i=0; i< numberHeroes; i++)
             {
-                characterCardList[i].description.text = GameManagerSOE.instance.gameBalanceData.HeroList[i].Name + "\nPower Attack: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].PowerAttack + "\nStrong Against: " + GameManagerSOE.instance.gameBalanceData.HeroList[i].StrongAgainst;
-                characterCardList[i].imageCharacter.color = GameManagerSOE.instance.gameBalanceData.HeroList[i].ColorHero;
-                characterCardList[i].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
+                CharacterStats heroStats = GameManagerSOE.instance.gameBalanceData.HeroList[i];
+                string heroDesc = heroStats.Name;
+                heroDesc += "\nPower Attack: ";
+                heroDesc += heroStats.PowerAttack;
+                heroDesc += "\nStrong Against: ";
+                heroDesc += heroStats.StrongAgainst;
+
+                characterCardList[i].description.text = heroDesc;
+
+                characterCardList[i].imageCharacter.color = heroStats.ColorHero;
+
+                characterCardList[i].imageBackground.color = unSelectedColorCharacter;
                 characterCardList[i].isSelected = false;
             }
         }
@@ -38,12 +52,12 @@ namespace SnippetsCode.ScriptableObjectExample
             if ((index < 0) || (index >= characterCardList.Count)) return;
             if (characterCardList[index].isSelected)
             {
-                characterCardList[index].imageBackground.color = GameManagerSOE.instance.gameBalanceData.UnSelectedColorCharacter;
+                characterCardList[index].imageBackground.color = unSelectedColorCharacter;
                 characterCardList[index].isSelected = false;
                 selectedCharacters -= 1;
             }else
             {
-                characterCardList[index].imageBackground.color = GameManagerSOE.instance.gameBalanceData.SelectedColorCharacter;
+                characterCardList[index].imageBackground.color = selectedColorCharacter;
                 characterCardList[index].isSelected = true;
                 selectedCharacters += 1;
             }
