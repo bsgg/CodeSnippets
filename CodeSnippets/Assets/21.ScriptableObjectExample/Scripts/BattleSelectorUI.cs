@@ -9,7 +9,10 @@ namespace SnippetsCode.ScriptableObjectExample
     {
         [SerializeField] private List<CharacterSelectorUI> characterCardList;
 
+        [SerializeField] private CharacterSelectorUI bossCharacterUI;
+
         [SerializeField] private Button StartBattleButton;
+        [SerializeField] private Image StartBattleImageButton;
 
         [SerializeField] private Text stateTextBattle;
 
@@ -21,8 +24,13 @@ namespace SnippetsCode.ScriptableObjectExample
         [SerializeField] private Color selectedColorCharacter;
         [SerializeField] private Color unSelectedColorCharacter;
 
+        [SerializeField] private Color battleReadyButton;
+        [SerializeField] private Color battleNotReadyButton;
+
         void Start()
-        {            
+        {
+            StartBattleImageButton.color = battleNotReadyButton;
+
             selectedCharacters = 0;
 
             stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
@@ -44,6 +52,8 @@ namespace SnippetsCode.ScriptableObjectExample
                 characterCardList[i].imageBackground.color = unSelectedColorCharacter;
                 characterCardList[i].isSelected = false;
             }
+
+            bossCharacterUI.description.text = "Choose wisely insignificant ant... this battle won't be easy";
         }
 
 
@@ -65,10 +75,20 @@ namespace SnippetsCode.ScriptableObjectExample
             if (selectedCharacters >= GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
             {
                 stateTextBattle.text = "Ready for battle";
-            }else
+                StartBattleImageButton.color = battleReadyButton;
+            }
+            else
             {
                 stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
+                StartBattleImageButton.color = battleNotReadyButton;
             }
+        }
+
+        public void OnStartBattle()
+        {
+            bossCharacterUI.description.text = "OK... You went throught the hard path.. back off or die!";
+
+            bossCharacterUI.description.text = GameManagerSOE.instance.randomBoss.Name + "(" + GameManagerSOE.instance.randomBoss.Health + ")" + "\nPower Attack: " + GameManagerSOE.instance.randomBoss.PowerAttack + "\nSpell: " + GameManagerSOE.instance.randomBoss.StrongAgainst;
         }
         
     }
