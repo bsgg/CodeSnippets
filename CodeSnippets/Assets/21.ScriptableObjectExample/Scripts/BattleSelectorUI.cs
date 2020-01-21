@@ -27,13 +27,17 @@ namespace SnippetsCode.ScriptableObjectExample
         [SerializeField] private Color battleReadyButton;
         [SerializeField] private Color battleNotReadyButton;
 
+
+       // [SerializeField] private GameObject bossPanel;
+
         void Start()
         {
-            StartBattleImageButton.color = battleNotReadyButton;
+            bossCharacterUI.gameObject.SetActive(false);           
 
             selectedCharacters = 0;
 
-            stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
+            stateTextBattle.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
+            StartBattleImageButton.color = battleNotReadyButton;
 
             int numberHeroes = GameManagerSOE.instance.gameBalanceData.HeroList.Count;
             for (int i=0; i< numberHeroes; i++)
@@ -60,35 +64,56 @@ namespace SnippetsCode.ScriptableObjectExample
         public void OnSelectedCharacter(int index)
         {
             if ((index < 0) || (index >= characterCardList.Count)) return;
+
+            bool tooManySelected = false;
+
             if (characterCardList[index].isSelected)
             {
                 characterCardList[index].imageBackground.color = unSelectedColorCharacter;
                 characterCardList[index].isSelected = false;
                 selectedCharacters -= 1;
             }else
-            {
-                characterCardList[index].imageBackground.color = selectedColorCharacter;
-                characterCardList[index].isSelected = true;
-                selectedCharacters += 1;
+            {               
+
+                if (selectedCharacters < GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
+                {
+                    characterCardList[index].imageBackground.color = selectedColorCharacter;
+                    characterCardList[index].isSelected = true;
+                    selectedCharacters += 1;
+
+                }else if (selectedCharacters == GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
+                {
+                    tooManySelected = true;
+                }
             }
 
-            if (selectedCharacters >= GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
+            if (selectedCharacters < GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
             {
-                stateTextBattle.text = "Ready for battle";
-                StartBattleImageButton.color = battleReadyButton;
-            }
-            else
-            {
-                stateTextBattle.text = "At least " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " for battle";
                 StartBattleImageButton.color = battleNotReadyButton;
+                stateTextBattle.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
             }
+            else if (selectedCharacters == GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
+            {
+                if (tooManySelected)
+                {
+                    stateTextBattle.text = "WASN'T I CLEAR? I SAID ONLY " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES!!";
+                    
+                }else
+                {
+                    stateTextBattle.text = "READY FOR BATTLE";
+                }
+                StartBattleImageButton.color = battleReadyButton;
+            }            
         }
 
         public void OnStartBattle()
         {
-            bossCharacterUI.description.text = "OK... You went throught the hard path.. back off or die!";
+            //bossCharacterUI.description.text = "OK... You went throught the hard path.. back off or die!";
 
             bossCharacterUI.description.text = GameManagerSOE.instance.randomBoss.Name + "(" + GameManagerSOE.instance.randomBoss.Health + ")" + "\nPower Attack: " + GameManagerSOE.instance.randomBoss.PowerAttack + "\nSpell: " + GameManagerSOE.instance.randomBoss.StrongAgainst;
+
+            // Show enemy
+            bossCharacterUI.gameObject.SetActive(true);
         }
         
     }
