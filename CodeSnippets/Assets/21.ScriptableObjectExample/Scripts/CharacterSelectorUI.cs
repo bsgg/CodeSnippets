@@ -8,7 +8,7 @@ namespace SnippetsCode.ScriptableObjectExample
     public class CharacterSelectorUI : MonoBehaviour
     {
         public Text description;
-        public Image imageBackground;
+        public Image imageSelection;
         public Image imageCharacter;
         public Button charButton;
 

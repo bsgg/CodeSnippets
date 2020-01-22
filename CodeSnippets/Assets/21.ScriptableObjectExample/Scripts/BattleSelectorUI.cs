@@ -7,36 +7,36 @@ namespace SnippetsCode.ScriptableObjectExample
 {
     public class BattleSelectorUI : MonoBehaviour
     {
+        [Header("Character")]
         [SerializeField] private List<CharacterSelectorUI> characterCardList;
 
+        [Header("Boss")]
+        [SerializeField] private GameObject bossPanel;
         [SerializeField] private CharacterSelectorUI bossCharacterUI;
 
+        [Header("UI")]
+        [SerializeField] private Text titleText;
         [SerializeField] private Button StartBattleButton;
         [SerializeField] private Image StartBattleImageButton;
+        [SerializeField] private Color battleReadyButton;
+        [SerializeField] private Color battleNotReadyButton;
 
-        [SerializeField] private Text stateTextBattle;
+
 
         private int selectedCharacters = 0;
 
         public CharacterStats randomBoss;
 
 
-        [SerializeField] private Color selectedColorCharacter;
-        [SerializeField] private Color unSelectedColorCharacter;
-
-        [SerializeField] private Color battleReadyButton;
-        [SerializeField] private Color battleNotReadyButton;
-
-
-       // [SerializeField] private GameObject bossPanel;
+     
 
         void Start()
         {
-            bossCharacterUI.gameObject.SetActive(false);           
+            bossPanel.gameObject.SetActive(false);           
 
             selectedCharacters = 0;
 
-            stateTextBattle.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
+            titleText.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
             StartBattleImageButton.color = battleNotReadyButton;
 
             int numberHeroes = GameManagerSOE.instance.gameBalanceData.HeroList.Count;
@@ -44,16 +44,16 @@ namespace SnippetsCode.ScriptableObjectExample
             {
                 CharacterStats heroStats = GameManagerSOE.instance.gameBalanceData.HeroList[i];
                 string heroDesc = heroStats.Name;
-                heroDesc += "\nPower Attack: ";
+                heroDesc += "\nAttack: ";
                 heroDesc += heroStats.PowerAttack;
-                heroDesc += "\nStrong Against: ";
+                heroDesc += "\nStrong: ";
                 heroDesc += heroStats.StrongAgainst;
 
                 characterCardList[i].description.text = heroDesc;
 
-                characterCardList[i].imageCharacter.color = heroStats.ColorHero;
+                characterCardList[i].imageCharacter.sprite = heroStats.Image;
 
-                characterCardList[i].imageBackground.color = unSelectedColorCharacter;
+                characterCardList[i].imageSelection.gameObject.SetActive(false);
                 characterCardList[i].isSelected = false;
             }
 
@@ -69,7 +69,7 @@ namespace SnippetsCode.ScriptableObjectExample
 
             if (characterCardList[index].isSelected)
             {
-                characterCardList[index].imageBackground.color = unSelectedColorCharacter;
+                characterCardList[index].imageSelection.gameObject.SetActive(false);
                 characterCardList[index].isSelected = false;
                 selectedCharacters -= 1;
             }else
@@ -77,7 +77,7 @@ namespace SnippetsCode.ScriptableObjectExample
 
                 if (selectedCharacters < GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
                 {
-                    characterCardList[index].imageBackground.color = selectedColorCharacter;
+                    characterCardList[index].imageSelection.gameObject.SetActive(true);
                     characterCardList[index].isSelected = true;
                     selectedCharacters += 1;
 
@@ -90,17 +90,17 @@ namespace SnippetsCode.ScriptableObjectExample
             if (selectedCharacters < GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
             {
                 StartBattleImageButton.color = battleNotReadyButton;
-                stateTextBattle.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
+                titleText.text = "BRING " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES TO THE BATTLE";
             }
             else if (selectedCharacters == GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle)
             {
                 if (tooManySelected)
                 {
-                    stateTextBattle.text = "WASN'T I CLEAR? I SAID ONLY " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES!!";
+                    titleText.text = "WASN'T I CLEAR? I SAID ONLY " + GameManagerSOE.instance.gameBalanceData.MinimunHeroesForBattle + " HEROES!!";
                     
                 }else
                 {
-                    stateTextBattle.text = "READY FOR BATTLE";
+                    titleText.text = "READY FOR BATTLE";
                 }
                 StartBattleImageButton.color = battleReadyButton;
             }            
@@ -108,12 +108,10 @@ namespace SnippetsCode.ScriptableObjectExample
 
         public void OnStartBattle()
         {
-            //bossCharacterUI.description.text = "OK... You went throught the hard path.. back off or die!";
-
             bossCharacterUI.description.text = GameManagerSOE.instance.randomBoss.Name + "(" + GameManagerSOE.instance.randomBoss.Health + ")" + "\nPower Attack: " + GameManagerSOE.instance.randomBoss.PowerAttack + "\nSpell: " + GameManagerSOE.instance.randomBoss.StrongAgainst;
 
             // Show enemy
-            bossCharacterUI.gameObject.SetActive(true);
+            bossPanel.gameObject.SetActive(true);
         }
         
     }

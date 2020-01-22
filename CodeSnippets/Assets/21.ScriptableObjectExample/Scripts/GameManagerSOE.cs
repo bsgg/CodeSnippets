@@ -24,7 +24,7 @@ namespace SnippetsCode.ScriptableObjectExample
         private void Start()
         {
             // Generate a random boss
-            randomBoss.Name = "Boss " + Random.Range(0, 500);
+            randomBoss.Name = "Very Scary...Onion?";
             randomBoss.PowerAttack = Random.Range(gameBalanceData.BossMinPowerAttackRange, gameBalanceData.BossMaxPowerAttackRange);
             randomBoss.Health = Random.Range(gameBalanceData.BossMinHealthRange, gameBalanceData.BossMaxHealthRange);
 

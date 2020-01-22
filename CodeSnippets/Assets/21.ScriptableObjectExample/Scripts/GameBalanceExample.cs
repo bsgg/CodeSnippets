@@ -8,12 +8,12 @@ namespace SnippetsCode.ScriptableObjectExample
 
     [System.Serializable]
     public class CharacterStats
-    {
+    {        
         public string Name;
+        public Sprite Image;
         public float Health;
         public float PowerAttack;
         public SkillType StrongAgainst;
-        public Color ColorHero;
     }
 
     [CreateAssetMenu(fileName = "GameBalance", menuName = "CodeSnippets/GameBalance", order = 1)]
