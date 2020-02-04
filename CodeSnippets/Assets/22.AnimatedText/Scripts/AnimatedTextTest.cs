@@ -12,7 +12,7 @@ namespace SnippetsCode.AnimatedDialogText
 
         void Start()
         {
-            animatedText.AnimateText(0.40f, TextToAnimate);
+            animatedText.AnimateText(2.0f, TextToAnimate);
             AnimatedText.OnAnimatedTextCompleted += AnimatedText_OnAnimatedTextCompleted;
         }
 
